@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - ยิ่งสูงยิ่งหนาว</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .control-panel { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .team-input { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        input { width: 90%; padding: 8px; margin-top: 5px; }
+        button { 
+            display: block; 
+            width: 100%; 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 15px; 
+            background: #28a745; 
+            color: white; 
+            font-size: 1.5rem; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 8px;
+        }
+        button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">🎮 แผงควบคุมคะแนน (Offline)</h1>
+    <div class="control-panel" id="inputs">
+        </div>
+    <button onclick="saveData()">💾 อัปเดตคะแนนทันที</button>
+
+    <script>
+        // โหลดข้อมูลเก่าถ้ามี
+        const savedData = JSON.parse(localStorage.getItem('gameData')) || [];
+
+        const container = document.getElementById('inputs');
+        for (let i = 1; i <= 9; i++) {
+            // หาข้อมูลเก่าของทีมนี้
+            const team = savedData.find(t => t.id === i) || { name: `Team ${i}`, score: 0 };
+            
+            container.innerHTML += `
+                <div class="team-input">
+                    <strong>ทีมที่ ${i}</strong><br>
+                    ชื่อ: <input type="text" id="name-${i}" value="${team.name}"><br>
+                    คะแนน: <input type="number" id="score-${i}" value="${team.score}">
+                </div>
+            `;
+        }
+
+        function saveData() {
+            let data = [];
+            for (let i = 1; i <= 9; i++) {
+                const name = document.getElementById(`name-${i}`).value;
+                const score = parseInt(document.getElementById(`score-${i}`).value) || 0;
+                data.push({ id: i, name: name, score: score });
+            }
+            
+            // บันทึกลง LocalStorage
+            localStorage.setItem('gameData', JSON.stringify(data));
+            alert('✅ อัปเดตเรียบร้อย!');
+        }
+    </script>
+</body>
+</html>
