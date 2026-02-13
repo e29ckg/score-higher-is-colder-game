@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปริศนาคำ - Live Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #12142d;
+            --card-bg: #1a1d3a;
+            --bar-bg: #0d2552;
+            --bar-fill: #e6d5b8;
+            --accent: #ff4d6d;
+            --btn-color: #4a90e2;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%);
+            background-size: cover;
+            background-attachment: fixed;
+            color: white;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* จัดให้อยู่กึ่งกลางหน้าจอแนวตั้งเวลาเปิดเต็มจอ */
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 2vh 0; 
+            box-sizing: border-box;
+        }
+
+        .game-title {
+            font-size: 4rem; /* ขยายชื่อเกมให้ใหญ่ขึ้น */
+            color: #fff;
+            margin: 0 0 2vh 0;
+            text-shadow: 0 0 15px rgba(255, 77, 109, 0.8), 0 0 30px rgba(255, 77, 109, 0.4);
+        }
+
+        /* --- ส่วนปุ่มคำถาม --- */
+        .questions-container {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 3vh; /* ปรับช่องว่างให้ยืดหยุ่นตามหน้าจอ */
+            width: 95%;
+            max-width: 1300px; /* ขยายความกว้างปุ่มเวลากางเต็มจอ */
+            overflow-x: auto;
+        }
+        .q-btn {
+            background: var(--card-bg);
+            color: white;
+            border: 2px solid var(--btn-color);
+            padding: 12px 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            font-family: 'Kanit', sans-serif;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        .q-btn:hover { background: var(--btn-color); transform: translateY(-3px); }
+
+        /* --- กระดานคะแนน --- */
+        .board-container {
+            background: var(--card-bg);
+            width: 95%;
+            max-width: 1400px; /* ขยายให้กรอบกว้างขึ้น */
+            height: 55vh; /* ใช้ vh เพื่อให้ความสูงยืดตามขนาดหน้าจอ (55% ของจอ) */
+            min-height: 450px; 
+            max-height: 700px; /* จำกัดไม่ให้สูงเกินไปบนจอใหญ่มากๆ */
+            padding: 130px 30px 50px 30px; /* **เพิ่ม padding ด้านบนเยอะขึ้น กันตัวเลขและมงกุฎทะลุกรอบ** */
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-evenly; /* กระจายระยะห่างแท่งกราฟให้สมดุล */
+            align-items: flex-end;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        .team-column {
+            display: flex; flex-direction: column; align-items: center;
+            width: 10%; height: 100%; justify-content: flex-end; position: relative;
+        }
+        
+        .bar-wrapper {
+            width: 60px; /* ปรับแท่งให้กว้างขึ้น */
+            height: 100%; 
+            background: var(--bar-bg);
+            border-radius: 15px 15px 0 0; 
+            position: relative; 
+            display: flex; 
+            justify-content: center;
+        }
+        
+        .bar-fill {
+            position: absolute; bottom: 0; width: 100%; background: var(--bar-fill);
+            border-radius: 15px 15px 0 0; transition: height 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .moving-group {
+            position: absolute; display: flex; flex-direction: column; align-items: center;
+            transform: translateY(35px); /* ปรับจุดศูนย์กลางตามขนาดรูปที่ใหญ่ขึ้น */
+            transition: bottom 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10; width: 120px;
+        }
+        
+        .score-text {
+            color: var(--accent); font-weight: bold; 
+            font-size: 2.2rem; /* ขยายตัวเลขให้ชัดเจนเวลาเปิดเต็มจอ */
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8); margin-bottom: 5px; z-index: 16;
+        }
+        
+        .crown {
+            font-size: 2.5rem; margin-bottom: -15px; z-index: 15;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); animation: float 2s infinite ease-in-out;
+        }
+        
+        .team-icon {
+            width: 70px; height: 70px; /* ขยายรูปภาพวงกลมให้ใหญ่ขึ้น */
+            background: white; border-radius: 50%;
+            border: 4px solid #4a90e2; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative; z-index: 12;
+        }
+        
+        .team-icon:hover { transform: scale(1.1); border-color: var(--accent); }
+        .team-icon img { width: 100%; height: 100%; object-fit: cover; background-color: white;}
+        .team-name { margin-top: 55px; font-size: 1.3rem; font-weight: 500; white-space: nowrap; color: #e0e0e0; }
+
+        /* --- Modal ทั่วไป --- */
+        .modal {
+            display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal.show { display: flex; opacity: 1; }
+        .modal-content {
+            background-color: var(--card-bg); padding: 30px; border-radius: 20px;
+            text-align: center; position: relative; box-shadow: 0 0 30px rgba(255, 77, 109, 0.3);
+            border: 2px solid #2a2d5a; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal.show .modal-content { transform: scale(1); }
+        .close-btn {
+            color: #aaa; position: absolute; top: 15px; right: 25px;
+            font-size: 30px; font-weight: bold; cursor: pointer; z-index: 10;
+        }
+        .close-btn:hover { color: white; }
+
+        /* --- Modal ของทีม --- */
+        .team-modal-content { max-width: 450px; width: 90%; padding: 40px; }
+        .modal-game-title { color: #f0a500; margin-top: 0; font-size: 2.2rem;}
+        .modal-img-container { position: relative; width: 250px; height: 180px; margin: 30px auto 20px auto; }
+        .modal-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; border: 5px solid #4a90e2; background: white; }
+        .modal-crown {
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+            font-size: 4rem; z-index: 10; display: none; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+            animation: float 2s infinite ease-in-out;
+        }
+        .modal-team-name { font-size: 1.8rem; margin: 10px 0; color: #fff; }
+        .modal-score { font-size: 3rem; color: var(--accent); font-weight: bold; text-shadow: 0 0 15px rgba(255, 77, 109, 0.5); }
+
+        /* --- Modal ของคำถาม --- */
+        .question-modal-content { max-width: 800px; width: 95%; }
+        
+        .modal-timer-box {
+            background: var(--accent); color: white; font-size: 2.5rem;
+            padding: 5px 30px; border-radius: 10px; font-weight: bold;
+            display: inline-block; margin: 10px 0; cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 77, 109, 0.5); transition: transform 0.2s;
+        }
+        .modal-timer-box:hover { transform: scale(1.05); }
+
+        @keyframes timeUpAlert {
+            0%, 100% { background: var(--accent); transform: scale(1); box-shadow: 0 0 20px rgba(255, 77, 109, 0.8); }
+            50% { background: #ff0000; color: #ffff00; transform: scale(1.1); box-shadow: 0 0 50px rgba(255, 0, 0, 1); }
+        }
+        .time-up-anim { animation: timeUpAlert 0.8s infinite; }
+
+        .q-display-img {
+            width: 100%; max-height: 40vh; object-fit: contain;  /* ให้รูปคำถามย่อตามหน้าจอ */
+            border-radius: 10px; margin: 15px 0; background: #fff;
+        }
+        
+        .reveal-btn {
+            background: #f0a500; color: #12142d; border: none; padding: 12px 40px;
+            font-size: 1.3rem; font-weight: bold; font-family: 'Kanit', sans-serif;
+            border-radius: 10px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(240, 165, 0, 0.4);
+        }
+        .reveal-btn:hover { transform: scale(1.05); background: #ffbc2b; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="game-title">ปริศนาคำ</h1>
+
+    <div class="questions-container" id="questionButtons">
+        </div>
+
+    <div class="board-container" id="leaderboard">
+        </div>
+
+    <div id="teamModal" class="modal" onclick="closeModal(event, 'teamModal')">
+        <div class="modal-content team-modal-content">
+            <span class="close-btn" onclick="closeModalAction('teamModal')">&times;</span>
+            <h2 class="modal-game-title">ปริศนาคำ</h2>
+            <div class="modal-img-container">
+                <div id="modalCrown" class="modal-crown">👑</div>
+                <img id="modalImg" class="modal-img" src="" alt="Team">
+            </div>
+            <div id="modalTeamName" class="modal-team-name">ชื่อทีม</div>
+            <div style="color:#aaa;">คะแนนรวม</div>
+            <div id="modalScore" class="modal-score">0</div>
+        </div>
+    </div>
+
+    <div id="questionModal" class="modal" onclick="closeModal(event, 'questionModal')">
+        <div class="modal-content question-modal-content">
+            <span class="close-btn" onclick="closeModalAction('questionModal')">&times;</span>
+            
+            <h2 id="qModalTitle" class="modal-game-title" style="color: var(--accent); margin-bottom: 5px;">ข้อที่ ...</h2>
+            
+            <div>
+                <div class="modal-timer-box" id="modalTimer" onclick="startTimer()">05:00</div>
+            </div>
+            
+            <img id="qModalDisplay" class="q-display-img" src="" alt="คำถาม">
+            
+            <div>
+                <button id="revealAnswerBtn" class="reveal-btn" onclick="showAnswer()">เปิดเฉลย</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 🛑 ใส่ URL จาก Apps Script ของคุณตรงนี้
+    const API_URL = "https://script.google.com/macros/s/AKfycby-671G54ZlWjlbdcUIx3aLeCGrc0oYfvzyUv5VDaAviZv_8sUWMo1yPs575AiBqj8m/exec"; 
+
+    let currentTeamsData = [];
+    let currentQuestionsData = [];
+    let currentMaxScore = 0;
+    let activeQuestionIndex = null;
+    
+    // ตัวแปรสำหรับจัดการเวลา
+    let timerStarted = false;
+    let timerInterval;
+
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            let data = await response.json(); 
+            currentTeamsData = data.teams;
+            currentQuestionsData = data.questions;
+            
+            renderBoard(currentTeamsData);
+            renderQuestionButtons(currentQuestionsData);
+        } catch (e) { console.log("Error fetching data:", e); }
+    }
+
+    // --- ส่วนกระดานทีม ---
+    function renderBoard(teams) {
+        const container = document.getElementById('leaderboard');
+        currentMaxScore = Math.max(...teams.map(t => t.totalScore));
+        container.innerHTML = '';
+
+        teams.forEach((team, index) => {
+            const displayPercentage = currentMaxScore > 0 ? (team.totalScore / currentMaxScore) * 100 : 0;
+            const isTop = team.totalScore === currentMaxScore && currentMaxScore > 0;
+
+            const col = document.createElement('div');
+            col.className = 'team-column';
+            col.innerHTML = `
+                <div class="bar-wrapper">
+                    <div class="bar-fill" style="height: ${displayPercentage}%"></div>
+                    <div class="moving-group" style="bottom: ${displayPercentage}%">
+                        <div class="score-text">${team.totalScore}</div>
+                        ${isTop ? '<div class="crown">👑</div>' : ''}
+                        <div class="team-icon" onclick="openTeamModal(${index})">
+                            <img src="${team.imageUrl}" alt="${team.teamName}">
+                        </div>
+                    </div>
+                </div>
+                <div class="team-name">${team.teamName}</div>
+            `;
+            container.appendChild(col);
+        });
+    }
+
+    // --- ฟังก์ชันเปิดหน้าต่างทีม ---
+    function openTeamModal(teamIndex) {
+        const team = currentTeamsData[teamIndex];
+        const isTop = team.totalScore === currentMaxScore && currentMaxScore > 0;
+
+        document.getElementById('modalImg').src = team.imageUrl;
+        document.getElementById('modalTeamName').innerText = team.teamName;
+        document.getElementById('modalScore').innerText = team.totalScore;
+        document.getElementById('modalCrown').style.display = isTop ? 'block' : 'none';
+        
+        document.getElementById('teamModal').classList.add('show');
+    }
+
+    // --- ฟังก์ชันปุ่มคำถาม ---
+    function renderQuestionButtons(questions) {
+        const container = document.getElementById('questionButtons');
+        if (container.children.length === 0 && questions.length > 0) {
+            questions.forEach((q, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'q-btn';
+                btn.innerText = `ข้อ ${q.number}`;
+                btn.onclick = () => openQuestionModal(index);
+                container.appendChild(btn);
+            });
+        }
+    }
+
+    // --- ฟังก์ชันเปิดหน้าต่างคำถาม ---
+    function openQuestionModal(index) {
+        activeQuestionIndex = index;
+        const qData = currentQuestionsData[index];
+        
+        document.getElementById('qModalTitle').innerText = `คำถามข้อที่ ${qData.number}`;
+        document.getElementById('qModalDisplay').src = qData.questionUrl;
+        
+        // รีเซ็ตปุ่มเปิดเฉลย
+        const revealBtn = document.getElementById('revealAnswerBtn');
+        revealBtn.style.display = 'inline-block';
+        revealBtn.innerText = 'เปิดเฉลย';
+        revealBtn.style.background = '#f0a500'; 
+        revealBtn.style.pointerEvents = 'auto';
+
+        // 🛑 รีเซ็ตเวลาทุกครั้งที่เปิดคำถามใหม่
+        clearInterval(timerInterval);
+        timerStarted = false;
+        const timerDisplay = document.getElementById('modalTimer');
+        timerDisplay.innerText = "05:00";
+        timerDisplay.classList.remove('time-up-anim');
+
+        document.getElementById('questionModal').classList.add('show');
+    }
+
+    function showAnswer() {
+        if (activeQuestionIndex === null) return;
+        const qData = currentQuestionsData[activeQuestionIndex];
+        document.getElementById('qModalDisplay').src = qData.answerUrl;
+        
+        const revealBtn = document.getElementById('revealAnswerBtn');
+        revealBtn.innerText = 'เฉลยแล้ว';
+        revealBtn.style.background = '#4CAF50'; 
+        revealBtn.style.pointerEvents = 'none'; 
+        
+        // หยุดเวลาเมื่อเปิดเฉลย
+        clearInterval(timerInterval);
+        timerStarted = false;
+        document.getElementById('modalTimer').classList.remove('time-up-anim');
+    }
+
+    // --- ฟังก์ชันปิด Modal ---
+    function closeModalAction(modalId) {
+        document.getElementById(modalId).classList.remove('show');
+        // ถ้าปิดหน้าต่างคำถาม ให้หยุดเวลาด้วย
+        if (modalId === 'questionModal') {
+            clearInterval(timerInterval);
+            timerStarted = false;
+        }
+    }
+
+    function closeModal(event, modalId) {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            closeModalAction(modalId);
+        }
+    }
+
+    // --- ฟังก์ชันจับเวลา (ย้ายมาใช้กับปุ่มใน Popup) ---
+    function startTimer() {
+        if(timerStarted) return;
+        timerStarted = true;
+        // let time = 300; // 5 นาที (ถ้าต้องการเปลี่ยนเวลา แก้ไขตัวเลขนี้ได้ครับ)
+        let time = 5; // 5 วินาที สำหรับทดสอบ
+
+        const display = document.getElementById('modalTimer');
+        display.classList.remove('time-up-anim'); 
+
+        timerInterval = setInterval(() => {
+            let mins = Math.floor(time / 60);
+            let secs = time % 60;
+            display.innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            
+            if (--time < 0) {
+                clearInterval(timerInterval);
+                display.innerText = "หมดเวลา!";
+                display.classList.add('time-up-anim'); 
+                timerStarted = false; 
+            }
+        }, 1000);
+    }
+
+    setInterval(fetchData, 3000);
+    fetchData();
+</script>
+</body>
+</html>
