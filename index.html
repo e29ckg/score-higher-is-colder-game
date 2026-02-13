@@ -3,277 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ยิ่งสูงยิ่งหนาว - Tower Scoreboard</title>
+    <title>ยิ่งสูงยิ่งหนาว - Scoreboard</title>
     <style>
-        /* --- ตั้งค่าพื้นฐาน --- */
-        :root {
-            --bg-color: #0f172a; /* สีท้องฟ้ามืด */
-            --text-color: #ffffff;
-            --tower-base-color: #3b82f6; /* สีตึกพื้นฐาน */
-            --tower-high-color: #06b6d4; /* สีตึกตอนสูง (ไล่เฉด) */
-        }
-
         body {
-            margin: 0;
-            padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* ป้องกัน Scrollbar */
-        }
-
-        header {
+            background-color: #1a1a2e;
+            color: #ffffff;
             text-align: center;
             padding: 20px;
-            z-index: 10;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        h1 {
+            color: #0f3460;
+            text-shadow: 2px 2px 4px #e94560;
+            font-size: 3em;
+            margin-bottom: 5px;
         }
 
-        h1 { margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        /* --- ส่วนของนาฬิกาจับเวลา --- */
+        .timer-box { margin: 20px 0; }
+        .timer-display {
+            font-size: 3em;
+            background: #e94560;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.5);
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        /* 🚨 เอฟเฟกต์นาฬิกากระพริบตอนหมดเวลา 🚨 */
+        @keyframes flashAlert {
+            0%, 100% { background-color: #ff0000; transform: scale(1); box-shadow: 0 0 20px #ff0000; }
+            50% { background-color: #8b0000; color: #ffd700; transform: scale(1.1); box-shadow: 0 0 50px #ff0000; }
+        }
+        .timer-time-up {
+            animation: flashAlert 0.8s infinite;
+        }
 
-        /* --- Container ของกราฟแนวตั้ง --- */
-        .city-landscape {
-            flex: 1;
+        .btn-start {
+            background: #a8dadc;
+            color: #1d3557;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-start:hover { background: #457b9d; color: white; }
+
+        /* --- ส่วนของบอร์ดคะแนนแนวตั้ง --- */
+        #scoreboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 40px 20px 20px 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             display: flex;
+            justify-content: space-around;
             align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 50px;
-            
-            /* --- แก้ไขตรงนี้ --- */
-            width: 100%;        /* ให้กว้างเต็มจอ */
-            max-width: none;    /* ลบขีดจำกัดความกว้างสูงสุดออก (เดิม 1200px) */
-            padding-left: 20px; /* เว้นขอบซ้ายนิดหน่อย */
-            padding-right: 20px;/* เว้นขอบขวานิดหน่อย */
-            box-sizing: border-box; /* ให้นับรวม padding ในความกว้าง */
-            
-            gap: 10px; /* ระยะห่างระหว่างตึก */
-            border-bottom: 2px solid #555;
+            height: 500px;
+            overflow-x: auto;
         }
 
-        /* --- โครงสร้างแต่ละทีม (Lane) --- */
-        .team-lane {
+        .team-col {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            
-            /* --- แก้ไขตรงนี้ --- */
-            flex: 1;      /* สั่งให้ยืดขยายกินพื้นที่ที่เหลือทั้งหมด */
-            width: auto;  /* ยกเลิกความกว้างคงที่ */
-            
-            height: 100%; 
-            position: relative;
-            min-width: 50px; /* กันไม่ให้บีบจนเล็กเกินไปในจอมือถือ */
+            height: 100%;
+            width: 100px;
         }
 
-        /* --- ตัวตึก (Bar) --- */
-        .tower {
-            width: 100%;
-            background: linear-gradient(to top, var(--tower-base-color), var(--tower-high-color));
-            border-radius: 5px 5px 0 0;
-            transition: height 0.8s cubic-bezier(0.25, 1, 0.5, 1); /* เอฟเฟกต์ยืดหดนุ่มนวล */
-            position: relative;
-            min-height: 5px; /* ให้เห็นฐานนิดหน่อยแม้คะแนน 0 */
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-        }
-        /* --- ข้อความชื่อทีมบนตัวตึก --- */
-        .tower-label {
-            position: absolute;
-            width: 100%;
-            top: 10px; /* อยู่ห่างจากยอดตึกนิดหน่อย */
+        .score-area {
+            margin-bottom: 15px;
             text-align: center;
-            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        /* 👑 แอนิเมชันสำหรับมงกุฎ 👑 */
+        @keyframes crownBounce {
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px gold); }
+            50% { transform: translateY(-8px) scale(1.1); filter: drop-shadow(0 0 15px #ffeb3b); }
+        }
+
+        .crown {
+            font-size: 2em;
+            margin-bottom: 5px;
+            min-height: 40px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .crown.winner { animation: crownBounce 1.5s infinite ease-in-out; opacity: 1; }
+        .crown.loser { opacity: 0; animation: none; }
+
+        .score {
+            font-size: 1.8em;
             font-weight: bold;
-            font-size: 1.1rem; /* ปรับขนาดตัวอักษร */
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* เงาดำให้อ่านง่าย */
-            
-            /* ป้องกันข้อความล้นถ้าตึกเตี้ย */
-            overflow: hidden; 
-            white-space: nowrap;
-            pointer-events: none;
-            z-index: 5;
+            color: #e94560;
         }
 
-        /* ถ้าตึกเตี้ยมากๆ (คะแนนน้อย) ให้ซ่อนชื่อทีมบนตึก (เหลือแต่อ่านข้างล่าง) */
-        .tower[style*="height: 0%"] .tower-label,
-        .tower[style*="height: 1%"] .tower-label,
-        .tower[style*="height: 2%"] .tower-label, 
-        .tower[style*="height: 3%"] .tower-label {
-            display: none;
+        .bar-container {
+            width: 60px;
+            height: 350px;
+            background: #0f3460;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: flex-end;
         }
 
-        /* --- ป้ายคะแนน (ลอยเหนือตึก) --- */
-        .score-badge {
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            transition: bottom 0.8s; /* ขยับตามความสูงตึก */
+        .bar {
+            width: 100%;
+            background: linear-gradient(0deg, #d4a373 0%, #faedcd 100%);
+            height: 0%;
+            transition: height 1s ease-in-out;
+            border-radius: 5px 5px 0 0;
+            position: relative;
         }
 
-        /* --- ชื่อทีม (ใต้ดิน) --- */
+        .team-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 2;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .team-img:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 10;
+        }
+
         .team-name {
             margin-top: 15px;
-            font-size: 1rem;
+            font-size: 1.2em;
             font-weight: bold;
-            color: #ccc;
             text-align: center;
+            height: 40px;
+            color: #a8dadc;
         }
 
-        /* เอฟเฟกต์เพิ่มเติม: เส้น Grid จางๆ ด้านหลัง */
-        .grid-line {
-            position: absolute;
-            width: 100%;
-            border-top: 1px dashed rgba(255,255,255,0.1);
-            z-index: -1;
-        }
-        /* --- สไตล์ของมงกุฎ --- */
-        .crown-icon {
-            position: absolute;
-            top: -65px; /* ลอยอยู่เหนือคะแนน */
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2.5rem; /* ขนาดมงกุฎ */
-            z-index: 20;
-            filter: drop-shadow(0 0 10px gold); /* เรืองแสงสีทอง */
-            animation: floatCrown 2s ease-in-out infinite; /* ขยับขึ้นลง */
+        /* --- 🖼️ ส่วนของป๊อปอัปรูปภาพทีม --- */
+        #imageModal {
+            display: none; 
+            position: fixed;
+            z-index: 990; 
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); 
+            align-items: center; justify-content: center; flex-direction: column;
         }
 
-        /* อนิเมชันลอยขึ้นลง */
-        @keyframes floatCrown {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-10px); }
+        .modal-info {
+            text-align: center; margin-bottom: 20px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            animation: zoomIn 0.3s ease;
         }
 
-        /* เพิ่มเอฟเฟกต์แสงให้ตึกของผู้นำ */
-        .leader-tower {
-            background: linear-gradient(to top, #f59e0b, #fbbf24) !important; /* สีทอง */
-            box-shadow: 0 0 25px rgba(251, 191, 36, 0.6) !important;
+        .modal-game-name { color: #a8dadc; font-size: 1.5em; margin: 0 0 10px 0; }
+        .modal-team-name { color: #ffffff; font-size: 3em; margin: 0; font-weight: bold; }
+        .modal-score-box {
+            background: rgba(233, 69, 96, 0.8); color: white; font-size: 2em;
+            font-weight: bold; padding: 5px 20px; border-radius: 10px;
+            display: inline-block; margin-top: 10px; border: 2px solid #fff;
         }
+        .modal-crown {
+            font-size: 4em; margin-bottom: -15px;
+            animation: crownBounce 1.5s infinite ease-in-out; display: none;
+        }
+
+        .modal-content {
+            max-width: 80%; max-height: 50vh; border: 5px solid white;
+            border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            animation: zoomIn 0.3s ease; 
+        }
+
+        .close-btn {
+            color: white; font-size: 50px; font-weight: bold;
+            position: absolute; top: 20px; right: 40px; cursor: pointer; z-index: 1000;
+        }
+        .close-btn:hover { color: #e94560; }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- 🚨 ส่วนของป๊อปอัปหมดเวลา (Time's Up Overlay) 🚨 --- */
+        #timeUpOverlay {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        @keyframes smashDown {
+            0% { transform: translateY(-300px) scale(0.2); opacity: 0; }
+            60% { transform: translateY(20px) scale(1.1); opacity: 1; }
+            80% { transform: translateY(-10px) scale(0.95); }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .time-up-text {
+            font-size: 7em;
+            color: #ff0000;
+            text-transform: uppercase;
+            font-weight: 900;
+            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 2px 2px 0px #fff;
+            margin: 0;
+            animation: smashDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        .time-up-subtext {
+            color: #fff;
+            font-size: 2em;
+            margin-top: 20px;
+            animation: zoomIn 1s ease 0.5s both;
+        }
+
+        .btn-close-timeup {
+            margin-top: 40px;
+            background: #e94560;
+            color: white;
+            font-size: 1.5em;
+            padding: 15px 40px;
+            border: 2px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            animation: zoomIn 1s ease 1s both;
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.5);
+            transition: all 0.3s;
+        }
+
+        .btn-close-timeup:hover {
+            background: #fff;
+            color: #e94560;
+            transform: scale(1.1);
+        }
+
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>❄️ ยิ่งสูงยิ่งหนาว ❄️</h1>
-        <p>LIVE SCOREBOARD</p>
-    </header>
+    <h1>❄️ ยิ่งสูงยิ่งหนาว ❄️</h1>
+    
+    <div class="timer-box">
+        <div id="timerDisplay" class="timer-display">05:00</div>
+        <br>
+        <button id="startBtn" class="btn-start" onclick="startTimer()">เริ่มจับเวลา 5 นาที</button>
+    </div>
 
-    <div class="city-landscape" id="game-area">
+    <div id="scoreboard">
+        กำลังโหลดคะแนน...
+    </div>
+
+    <div id="imageModal">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <div class="modal-info">
+            <h2 class="modal-game-name">❄️ ยิ่งสูงยิ่งหนาว ❄️</h2>
+            <div id="modalCrown" class="modal-crown">👑</div>
+            <h3 id="modalTeamName" class="modal-team-name">ชื่อทีม</h3>
+            <div class="modal-score-box">คะแนน: <span id="modalScore">0</span></div>
         </div>
+        <img id="largeImage" class="modal-content" src="" alt="Large Team Image">
+    </div>
 
-   <script>
-        // ==========================================
-        // ⚙️ การตั้งค่า (แก้แค่บรรทัดนี้!)
-        // ==========================================
-        
-        // 1. นำ "รหัสยาวๆ" (Sheet ID) ที่ก๊อปปี้มา ใส่แทนที่ตรงนี้ครับ
-        const SHEET_ID = '1HLByJ8t1NXpjXM6UIbdLSRmoYbcvgYK2arosPwQ2Pmc'; 
-        
-  const gameArea = document.getElementById('game-area');
+    <div id="timeUpOverlay">
+        <h1 class="time-up-text">หมดเวลา!</h1>
+        <div class="time-up-subtext">วางมือจากกล่องไม้ การแข่งขันสิ้นสุดลงแล้ว</div>
+        <button class="btn-close-timeup" onclick="closeTimeUp()">ดูผลคะแนน</button>
+    </div>
 
-    function initTowers() {
-        gameArea.innerHTML = '';
-        for (let i = 1; i <= 9; i++) {
-            const lane = document.createElement('div');
-            lane.className = 'team-lane';
-            lane.innerHTML = `
-                <div class="crown-area" id="crown-area-${i}"></div>
-                <div class="score-badge" id="score-${i}">0</div>
-                
-                <div class="tower" id="tower-${i}" style="height: 0%;">
-                    <div class="tower-label" id="tower-label-${i}"></div>
-                </div>
+    <script>
+        const API_URL = 'YOUR_WEB_APP_URL_HERE'; // *** ใส่ URL ของคุณที่นี่ ***
 
-                <div class="team-name" id="name-${i}">Team ${i}</div>
-            `;
-            gameArea.appendChild(lane);
-        }
-    }
+        async function fetchScores() {
+            try {
+                const response = await fetch(API_URL);
+                let data = await response.json();
 
-    async function fetchScores() {
-        if (SHEET_ID === 'YOUR_SHEET_ID_HERE') return;
+                const scoreboard = document.getElementById('scoreboard');
+                scoreboard.innerHTML = ''; 
 
-        const base = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=higher-is-colder-game`;
-        const url = `https://corsproxy.io/?${encodeURIComponent(base + '&t=' + Date.now())}`;
+                const currentMaxScore = Math.max(...data.map(d => d.score));
+                const heightMaxReference = Math.max(currentMaxScore, 1); 
 
-        try {
-            const response = await fetch(url);
-            const data = await response.text();
-            
-            // ล้างข้อมูลให้สะอาด (รองรับภาษาไทย/เว้นวรรค)
-            const cleanData = data.replace(/"/g, ''); 
-            const rows = cleanData.split('\n').slice(1);
+                data.forEach((item) => {
+                    const heightPercent = (item.score / heightMaxReference) * 100;
+                    const isWinner = (item.score === currentMaxScore && item.score > 0);
+                    const crownClass = isWinner ? 'crown winner' : 'crown loser';
 
-            let allTeams = [];
-            
-            rows.forEach(row => {
-                const cols = row.split(',');
-                if (cols.length >= 3) {
-                    const tID = parseInt(cols[0]);
-                    let tName = cols[1] ? cols[1].trim() : `Team ${tID}`;
-                    if (!tName) tName = `Team ${tID}`;
-                    const tScore = parseInt(cols[2]);
+                    const col = document.createElement('div');
+                    col.className = 'team-col';
                     
-                    if (!isNaN(tID) && !isNaN(tScore)) {
-                        allTeams.push({ id: tID, name: tName, score: tScore });
-                    }
-                }
-            });
+                    col.innerHTML = `
+                        <div class="score-area">
+                            <div class="${crownClass}">👑</div>
+                            <div class="score">${item.score}</div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar" style="height: ${heightPercent}%;">
+                                <img src="${item.imageUrl}" class="team-img" alt="team image" 
+                                     onclick="openModal('${item.imageUrl}', '${item.team}', ${item.score}, ${isWinner})">
+                            </div>
+                        </div>
+                        <div class="team-name">${item.team}</div>
+                    `;
+                    scoreboard.appendChild(col);
+                });
 
-            updateAllTowers(allTeams);
-
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-
-    function updateAllTowers(teamsData) {
-        const maxScore = Math.max(...teamsData.map(t => t.score), 1);
-
-        teamsData.forEach(team => {
-            const tower = document.getElementById(`tower-${team.id}`);
-            const scoreLabel = document.getElementById(`score-${team.id}`);
-            const nameLabel = document.getElementById(`name-${team.id}`);
-            const towerLabel = document.getElementById(`tower-label-${team.id}`); // ⭐ จับตัวชื่อบนตึก
-            const crownArea = document.getElementById(`crown-area-${team.id}`);
-
-            if (tower && scoreLabel) {
-                // อัปเดตชื่อ (ทั้งข้างล่าง และ บนตึก)
-                if (nameLabel) nameLabel.innerText = team.name;
-                if (towerLabel) towerLabel.innerText = team.name; // ใส่ชื่อบนตึก
-
-                // คำนวณความสูง
-                let heightPercent = 0;
-                if (team.score > 0) heightPercent = (team.score / maxScore) * 100;
-
-                tower.style.height = `${heightPercent}%`;
-                scoreLabel.textContent = team.score;
-
-                // Reset สไตล์
-                crownArea.innerHTML = ''; 
-                tower.classList.remove('leader-tower');
-                tower.style.background = ''; 
-
-                // เช็คเงื่อนไขผู้นำ
-                if (team.score === maxScore && team.score > 0) {
-                    tower.classList.add('leader-tower');
-                    crownArea.innerHTML = '<div class="crown-icon">👑</div>';
-                } else {
-                    if(heightPercent > 80) {
-                         tower.style.background = 'linear-gradient(to top, #3b82f6, #fff)';
-                         if(!scoreLabel.innerHTML.includes('❄️')) scoreLabel.innerHTML += ' ❄️';
-                    }
-                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
-        });
-    }
+        }
 
-    initTowers();
-    fetchScores();
-    setInterval(fetchScores, 2000); 
-</script>
+        // --- 🖼️ ฟังก์ชันเปิด/ปิด รูปภาพใหญ่ ---
+        function openModal(imageUrl, teamName, score, isWinner) {
+            const modal = document.getElementById('imageModal');
+            document.getElementById('largeImage').src = imageUrl;
+            document.getElementById('modalTeamName').innerText = teamName;
+            document.getElementById('modalScore').innerText = score;
+            
+            const crown = document.getElementById('modalCrown');
+            crown.style.display = isWinner ? 'block' : 'none';
+            modal.style.display = 'flex'; 
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none'; 
+        }
+
+        // คลิกว่างๆ เพื่อปิดรูปใหญ่ได้
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // --- 🚨 ฟังก์ชันปิดหน้าจอหมดเวลา 🚨 ---
+        function closeTimeUp() {
+            document.getElementById('timeUpOverlay').style.display = 'none';
+        }
+
+        // --- ระบบจับเวลาและเอฟเฟกต์ ---
+        let timeInSeconds = 5 * 60; // 5 นาที
+        // let timeInSeconds = 5; // ทดสอบแก้ตัวเลขตรงนี้เป็น 5 วินาที เพื่อดูเอฟเฟกต์ได้เร็วขึ้นครับ
+        
+        let timerInterval = null;
+
+        function startTimer() {
+            if (timerInterval) return;
+            document.getElementById('startBtn').style.display = 'none';
+
+            timerInterval = setInterval(() => {
+                timeInSeconds--;
+                let minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
+                let seconds = (timeInSeconds % 60).toString().padStart(2, '0');
+                
+                const timerDisplay = document.getElementById('timerDisplay');
+                timerDisplay.innerText = `${minutes}:${seconds}`;
+
+                // เมื่อเวลาเหลือ 0
+                if (timeInSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.innerText = "หมดเวลา!";
+                    
+                    // 1. เพิ่มคลาสให้ตัวเลขกระพริบ
+                    timerDisplay.classList.add('timer-time-up'); 
+                    
+                    // 2. โชว์ป๊อปอัปกระแทกหน้าจอ
+                    document.getElementById('timeUpOverlay').style.display = 'flex';
+                }
+            }, 1000);
+        }
+
+        fetchScores();
+        setInterval(fetchScores, 5000); 
+    </script>
 </body>
 </html>
