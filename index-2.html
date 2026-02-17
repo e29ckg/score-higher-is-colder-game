@@ -17,7 +17,7 @@
 
         body {
             font-family: 'Kanit', sans-serif;
-            background: linear-gradient(135deg, #ee3b3b 0%, #d76d77 50%, #ffaf7b 100%);
+            background: linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%);
             background-size: cover;
             background-attachment: fixed;
             color: white;
@@ -32,12 +32,30 @@
             box-sizing: border-box;
         }
 
+        .header-container {
+            text-align: center;
+            margin-bottom: 2vh;
+        }
+
         .game-title {
-            font-size: 4.5rem; /* ปรับให้ใหญ่ขึ้นนิดหน่อยเมื่อไม่มีตัวจับเวลา */
+            font-size: 4.5rem;
             color: #fff;
-            margin: 0 0 4vh 0; /* เพิ่มระยะห่างด้านล่างนิดหน่อย */
+            margin: 0 0 10px 0;
             text-shadow: 0 0 15px rgba(255, 77, 109, 0.8), 0 0 30px rgba(255, 77, 109, 0.4);
         }
+
+        .global-reset-btn {
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 8px 20px;
+            font-size: 1rem;
+            font-family: 'Kanit', sans-serif;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .global-reset-btn:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.05); }
 
         /* --- กระดานคะแนน --- */
         .board-container {
@@ -95,7 +113,12 @@
         
         .team-icon:hover { transform: scale(1.1); border-color: var(--accent); }
         .team-icon img { width: 100%; height: 100%; object-fit: cover; background-color: white;}
-        .team-name { margin-top: 55px; font-size: 1.3rem; font-weight: 500; white-space: nowrap; color: #e0e0e0; }
+        
+        .team-name { 
+            margin-top: 55px; font-size: 1.3rem; font-weight: 500; white-space: nowrap; color: #e0e0e0; 
+            cursor: pointer; padding: 5px 15px; border-radius: 10px; transition: 0.2s;
+        }
+        .team-name:hover { background: rgba(255,255,255,0.1); color: #fff; transform: scale(1.1); }
 
         /* --- Modal ทั่วไป --- */
         .modal {
@@ -116,46 +139,46 @@
         }
         .close-btn:hover { color: white; }
 
-        .team-modal-content { 
-            max-width: 800px; /* ขยายความกว้างกล่อง Modal */
-            width: 90%; 
-            padding: 50px; 
-        }
-        .modal-game-title { 
-            color: #f0a500; 
-            margin-top: 0; 
-            font-size: 3.5rem; /* ขยายชื่อเกม */
-        }
-        .modal-img-container { 
-            position: relative; 
-            width: 400px; /* ขยายรูปภาพ */
-            height: 280px; 
-            margin: 40px auto 30px auto; 
-        }
-        .modal-img { 
-            width: 100%; height: 100%; border-radius: 15px; 
-            object-fit: cover; border: 6px solid #4a90e2; background: white; 
-        }
+        /* --- Modal ของทีม (ดูรูป) --- */
+        .team-modal-content { max-width: 450px; width: 90%; }
+        .modal-game-title { color: #f0a500; margin-top: 0; font-size: 2.2rem;}
+        .modal-img-container { position: relative; width: 250px; height: 180px; margin: 30px auto 20px auto; }
+        .modal-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; border: 5px solid #4a90e2; background: white; }
         .modal-crown {
-            position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-            font-size: 6rem; /* ขยายมงกุฎ */
-            z-index: 10; display: none; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.6));
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+            font-size: 4rem; z-index: 10; display: none; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
             animation: float 2s infinite ease-in-out;
         }
-        .modal-team-name { 
-            font-size: 2.5rem; /* ขยายชื่อทีม */
-            margin: 15px 0; color: #fff; font-weight: bold;
+        .modal-team-name { font-size: 1.8rem; margin: 10px 0; color: #fff; }
+        .modal-score { font-size: 3rem; color: var(--accent); font-weight: bold; text-shadow: 0 0 15px rgba(255, 77, 109, 0.5); }
+
+        /* --- Modal กรอกคะแนน --- */
+        .scoring-modal-content { max-width: 400px; width: 90%; padding: 30px; }
+        .round-list {
+            background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; margin: 20px 0;
+            max-height: 200px; overflow-y: auto; text-align: left; font-size: 1.1rem;
         }
-        .modal-score-label {
-            color: #aaa; 
-            font-size: 1.5rem; /* ขยายคำว่า "คะแนนรวม" */
+        .round-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; 
         }
-        .modal-score { 
-            font-size: 6rem; /* ขยายตัวเลขคะแนน */
-            color: var(--accent); font-weight: bold; 
-            text-shadow: 0 0 20px rgba(255, 77, 109, 0.6); 
-            margin-top: 10px;
+        .action-btns button {
+            background: none; border: none; cursor: pointer;
+            font-size: 1rem; margin-left: 8px; opacity: 0.7; transition: 0.2s;
         }
+        .action-btns button:hover { opacity: 1; transform: scale(1.2); }
+
+        .score-input-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .score-input-group input { 
+            width: 100px; padding: 10px; font-size: 1.3rem; text-align: center;
+            border-radius: 10px; border: 2px solid var(--btn-color); background: #fff; color: #000;
+        }
+        .add-score-btn {
+            background: #4CAF50; color: white; border: none; padding: 10px 20px;
+            font-size: 1.2rem; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .add-score-btn:hover { background: #45a049; transform: scale(1.05); }
+
         @keyframes float {
             0%, 100% { transform: translate(-50%, 0); }
             50% { transform: translate(-50%, -10px); }
@@ -164,10 +187,14 @@
 </head>
 <body>
 
-    <h1 class="game-title">ปริศนาคำ</h1>
+    <div class="header-container">
+        <h1 class="game-title">ปริศนาคำ</h1>
+        <button class="global-reset-btn" onclick="resetAllScores()">🔄 รีเซตคะแนนทั้งหมด</button>
+    </div>
 
     <div class="board-container" id="leaderboard">
-        </div>
+        <h2 style="color: #aaa;">กำลังโหลดข้อมูลทีมจาก Google Sheet...</h2>
+    </div>
 
     <div id="teamModal" class="modal" onclick="closeModal(event, 'teamModal')">
         <div class="modal-content team-modal-content">
@@ -183,31 +210,85 @@
         </div>
     </div>
 
+    <div id="scoringModal" class="modal" onclick="closeModal(event, 'scoringModal')">
+        <div class="modal-content scoring-modal-content">
+            <span class="close-btn" onclick="document.getElementById('scoringModal').classList.remove('show')">&times;</span>
+            <h2 id="scoringTeamName" class="modal-game-title" style="color: #f0a500;">ชื่อทีม</h2>
+            
+            <div class="round-list" id="roundList">
+                </div>
+
+            <div class="score-input-group">
+                <input type="number" id="newScoreInput" placeholder="ใส่คะแนน" autocomplete="off">
+                <button class="add-score-btn" onclick="addScore()">เพิ่มคะแนน</button>
+            </div>
+
+            <div style="font-size: 1.5rem; margin-bottom: 10px;">
+                รวม: <span id="scoringTotalScore" style="color: var(--accent); font-weight: bold; font-size: 2rem;">0</span>
+            </div>
+        </div>
+    </div>
+
 <script>
-    // 🛑 ใส่ URL จาก Apps Script ของคุณตรงนี้
-    const API_URL = "https://script.google.com/macros/s/AKfycby-671G54ZlWjlbdcUIx3aLeCGrc0oYfvzyUv5VDaAviZv_8sUWMo1yPs575AiBqj8m/exec"; 
+    // 🛑 นำ Web App URL ของคุณมาใส่ตรงนี้
+    const API_URL = "https://script.google.com/macros/s/AKfycbzWxrk6NUDH9F67p1kd__xJnE6yNdOv-yRKKay3bQpRigGmpDVsVwbZMKU0bbTwF9aT/exec"; 
 
-    let currentTeamsData = [];
-    let currentMaxScore = 0;
+    let teamsData = [];
+    let currentEditingIndex = null;
 
-    async function fetchData() {
+    // ระบบโหลดข้อมูลผสานกัน (Sheet -> ชื่อ/รูปภาพ | LocalStorage -> คะแนน)
+    async function initData() {
         try {
+            // 1. ดึงข้อมูลทีมและรูปภาพจาก Google Sheet
             const response = await fetch(API_URL);
-            let data = await response.json(); 
+            let sheetData = await response.json();
             
-            // รองรับทั้งแบบที่ส่งกลับมาเป็นทีมอย่างเดียว หรือมี .teams ติดมาด้วย
-            currentTeamsData = data.teams ? data.teams : data; 
+            // 2. ดึงข้อมูลคะแนนที่เคยให้ไว้จาก LocalStorage
+            const savedData = localStorage.getItem('wordPuzzleScores');
+            const localTeams = savedData ? JSON.parse(savedData) : [];
+
+            // 3. นำข้อมูลมาประกอบร่างกัน (แก้ไขส่วนนี้ให้ตรงกับ Key 'team' และ 'imageUrl' ที่ได้จาก API)
+            teamsData = sheetData.map((sTeam, index) => {
+                // จับคู่คะแนนด้วยชื่อทีมที่มาจาก API คือ sTeam.team
+                const existingTeam = localTeams.find(lTeam => lTeam.name === sTeam.team);
+                
+                return {
+                    name: sTeam.team || `ทีม ${index + 1}`, // เปลี่ยนจาก sTeam.teamName เป็น sTeam.team
+                    imageUrl: sTeam.imageUrl || "https://cdn-icons-png.flaticon.com/512/3024/3024593.png",
+                    scores: existingTeam ? existingTeam.scores : [],
+                    totalScore: existingTeam ? existingTeam.totalScore : 0
+                };
+            });
+
+            // บันทึกการอัปเดตและแสดงผล
+            saveData();
+            renderBoard();
+
+        } catch (error) {
+            console.error("Error fetching from Google Sheet:", error);
             
-            renderBoard(currentTeamsData);
-        } catch (e) { console.log("Error fetching data:", e); }
+            // ถ้าเน็ตหลุดหรือโหลด Sheet ไม่ได้ ให้พยายามโหลดข้อมูลเก่าจากเครื่องมาแสดงแทน
+            const savedData = localStorage.getItem('wordPuzzleScores');
+            if (savedData) {
+                teamsData = JSON.parse(savedData);
+                renderBoard();
+            } else {
+                document.getElementById('leaderboard').innerHTML = '<h2 style="color:var(--accent);">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบลิงก์ API</h2>';
+            }
+        }
     }
 
-    function renderBoard(teams) {
+    function saveData() {
+        localStorage.setItem('wordPuzzleScores', JSON.stringify(teamsData));
+    }
+
+    // วาดกระดานคะแนน
+    function renderBoard() {
         const container = document.getElementById('leaderboard');
-        currentMaxScore = Math.max(...teams.map(t => t.totalScore));
+        const currentMaxScore = Math.max(...teamsData.map(t => t.totalScore));
         container.innerHTML = '';
 
-        teams.forEach((team, index) => {
+        teamsData.forEach((team, index) => {
             const displayPercentage = currentMaxScore > 0 ? (team.totalScore / currentMaxScore) * 100 : 0;
             const isTop = team.totalScore === currentMaxScore && currentMaxScore > 0;
 
@@ -219,29 +300,146 @@
                     <div class="moving-group" style="bottom: ${displayPercentage}%">
                         <div class="score-text">${team.totalScore}</div>
                         ${isTop ? '<div class="crown">👑</div>' : ''}
+                        
                         <div class="team-icon" onclick="openTeamModal(${index})">
-                            <img src="${team.imageUrl}" alt="${team.teamName}">
+                            <img src="${team.imageUrl}" alt="${team.name}">
                         </div>
                     </div>
                 </div>
-                <div class="team-name">${team.teamName}</div>
+                <div class="team-name" onclick="openScoringModal(${index})" title="คลิกเพื่อจัดการคะแนน">${team.name}</div>
             `;
             container.appendChild(col);
         });
     }
 
-    function openTeamModal(teamIndex) {
-        const team = currentTeamsData[teamIndex];
+    // เปิด Modal ดูรูปทีม
+    function openTeamModal(index) {
+        const team = teamsData[index];
+        const currentMaxScore = Math.max(...teamsData.map(t => t.totalScore));
         const isTop = team.totalScore === currentMaxScore && currentMaxScore > 0;
 
         document.getElementById('modalImg').src = team.imageUrl;
-        document.getElementById('modalTeamName').innerText = team.teamName;
+        document.getElementById('modalTeamName').innerText = team.name;
         document.getElementById('modalScore').innerText = team.totalScore;
         document.getElementById('modalCrown').style.display = isTop ? 'block' : 'none';
         
         document.getElementById('teamModal').classList.add('show');
     }
 
+    // เปิด Modal จัดการคะแนน
+    function openScoringModal(index) {
+        currentEditingIndex = index;
+        const team = teamsData[index];
+        
+        document.getElementById('scoringTeamName').innerText = team.name;
+        document.getElementById('scoringTotalScore').innerText = team.totalScore;
+        document.getElementById('newScoreInput').value = ''; 
+        
+        renderRoundList();
+        
+        document.getElementById('scoringModal').classList.add('show');
+        setTimeout(() => document.getElementById('newScoreInput').focus(), 100);
+    }
+
+    // แสดงรายการคะแนนแต่ละรอบ พร้อมปุ่มแก้ไขและลบ
+    function renderRoundList() {
+        const team = teamsData[currentEditingIndex];
+        const listContainer = document.getElementById('roundList');
+        
+        if (team.scores.length === 0) {
+            listContainer.innerHTML = '<div style="text-align:center; color:#aaa;">ยังไม่มีคะแนน</div>';
+            return;
+        }
+
+        listContainer.innerHTML = team.scores.map((score, roundIndex) => `
+            <div class="round-item">
+                <span>รอบที่ ${roundIndex + 1}</span>
+                <div class="action-btns">
+                    <span style="color: var(--accent); font-weight: bold; margin-right: 10px; font-size:1.2rem;">+${score}</span>
+                    <button onclick="editRoundScore(${roundIndex})" title="แก้ไข">✏️</button>
+                    <button onclick="deleteRoundScore(${roundIndex})" title="ลบ">❌</button>
+                </div>
+            </div>
+        `).join('');
+        
+        listContainer.scrollTop = listContainer.scrollHeight;
+    }
+
+    // อัปเดตและบันทึก
+    function updateAndSaveTeamScore(team) {
+        team.totalScore = team.scores.reduce((sum, current) => sum + current, 0);
+        saveData();
+        renderBoard();
+        renderRoundList();
+        document.getElementById('scoringTotalScore').innerText = team.totalScore;
+    }
+
+    // เพิ่มคะแนน
+    function addScore() {
+        if (currentEditingIndex === null) return;
+        
+        const input = document.getElementById('newScoreInput');
+        const scoreVal = parseInt(input.value);
+        
+        if (!isNaN(scoreVal)) {
+            const team = teamsData[currentEditingIndex];
+            team.scores.push(scoreVal);
+            updateAndSaveTeamScore(team);
+            
+            input.value = '';
+            input.focus();
+        } else {
+            alert('กรุณากรอกตัวเลขคะแนนให้ถูกต้องครับ');
+        }
+    }
+
+    // แก้ไขคะแนน
+    function editRoundScore(roundIndex) {
+        if (currentEditingIndex === null) return;
+        
+        const team = teamsData[currentEditingIndex];
+        const oldScore = team.scores[roundIndex];
+        const newScoreStr = prompt(`แก้ไขคะแนนรอบที่ ${roundIndex + 1}:`, oldScore);
+        
+        if (newScoreStr !== null && newScoreStr.trim() !== "") {
+            const newScore = parseInt(newScoreStr);
+            if (!isNaN(newScore)) {
+                team.scores[roundIndex] = newScore;
+                updateAndSaveTeamScore(team);
+            } else {
+                alert("กรุณาใส่ตัวเลขที่ถูกต้องครับ");
+            }
+        }
+    }
+
+    // ลบคะแนน
+    function deleteRoundScore(roundIndex) {
+        if (currentEditingIndex === null) return;
+        if (confirm(`ต้องการลบคะแนน รอบที่ ${roundIndex + 1} ใช่หรือไม่?`)) {
+            const team = teamsData[currentEditingIndex];
+            team.scores.splice(roundIndex, 1);
+            updateAndSaveTeamScore(team);
+        }
+    }
+
+    // --- ฟังก์ชันรีเซตคะแนนทั้งหมด ---
+    function resetAllScores() {
+        if (confirm('⚠️ แจ้งเตือน: คุณต้องการ "ล้างคะแนนของทุกทีม" กลับไปเป็น 0 ทั้งหมดใช่หรือไม่?\n\n(การกระทำนี้ไม่สามารถย้อนกลับได้)')) {
+            teamsData.forEach(team => {
+                team.scores = [];
+                team.totalScore = 0;
+            });
+            saveData();
+            renderBoard();
+        }
+    }
+
+    // กด Enter 
+    document.getElementById('newScoreInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') addScore();
+    });
+
+    // ปิด Modal
     function closeModal(event, modalId) {
         const modal = document.getElementById(modalId);
         if (event.target === modal) {
@@ -249,9 +447,8 @@
         }
     }
 
-    // โหลดข้อมูลอัตโนมัติทุก 3 วินาที
-    setInterval(fetchData, 3000);
-    fetchData();
+    // รันทันทีเมื่อโหลดหน้าเว็บ
+    initData();
 </script>
 </body>
 </html>

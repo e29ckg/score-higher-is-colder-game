@@ -15,13 +15,13 @@
             overflow-x: hidden;
         }
         h1 {
-            color: #f8f9fa;
-            text-shadow: 2px 2px 4px #3f1c22;
+            color: #0f3460;
+            text-shadow: 2px 2px 4px #e94560;
             font-size: 3em;
             margin-bottom: 5px;
         }
 
-        /* --- ส่วนของนาฬิกาจับเวลา --- */
+        /* --- ส่วนของนาฬิกาจับเวลา และปุ่มต่างๆ --- */
         .timer-box { margin: 20px 0; }
         .timer-display {
             font-size: 3em;
@@ -36,26 +36,32 @@
             transition: all 0.3s ease;
         }
         
-        /* 🚨 เอฟเฟกต์นาฬิกากระพริบตอนหมดเวลา 🚨 */
         @keyframes flashAlert {
             0%, 100% { background-color: #ff0000; transform: scale(1); box-shadow: 0 0 20px #ff0000; }
             50% { background-color: #8b0000; color: #ffd700; transform: scale(1.1); box-shadow: 0 0 50px #ff0000; }
         }
-        .timer-time-up {
-            animation: flashAlert 0.8s infinite;
+        .timer-time-up { animation: flashAlert 0.8s infinite; }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* ระยะห่างระหว่างปุ่ม */
         }
 
         .btn-start {
-            background: #a8dadc;
-            color: #1d3557;
-            font-size: 1.2em;
-            font-weight: bold;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            background: #a8dadc; color: #1d3557; font-size: 1.2em;
+            font-weight: bold; padding: 10px 20px; border: none;
+            border-radius: 5px; cursor: pointer;
         }
         .btn-start:hover { background: #457b9d; color: white; }
+
+        /* ปุ่มรีเซ็ตคะแนน */
+        .btn-reset {
+            background: #1d3557; color: #a8dadc; font-size: 1.2em;
+            font-weight: bold; padding: 10px 20px; border: 1px solid #a8dadc;
+            border-radius: 5px; cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn-reset:hover { background: #e94560; color: white; border-color: #e94560; }
 
         /* --- ส่วนของบอร์ดคะแนนแนวตั้ง --- */
         #scoreboard {
@@ -70,24 +76,17 @@
             align-items: flex-end;
             height: 500px;
             overflow-x: auto;
+            margin-top: 20px;
         }
 
         .team-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            height: 100%;
-            width: 100px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-end; height: 100%; width: 100px;
         }
 
         .score-area {
-            margin-bottom: 15px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
+            margin-bottom: 15px; text-align: center; display: flex;
+            flex-direction: column; justify-content: flex-end; align-items: center;
         }
 
         /* 👑 แอนิเมชันสำหรับมงกุฎ 👑 */
@@ -97,78 +96,58 @@
         }
 
         .crown {
-            font-size: 2em;
-            margin-bottom: 5px;
-            min-height: 40px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 2em; margin-bottom: 5px; min-height: 40px; 
+            display: flex; align-items: center; justify-content: center;
             transition: opacity 0.5s ease;
         }
 
         .crown.winner { animation: crownBounce 1.5s infinite ease-in-out; opacity: 1; }
         .crown.loser { opacity: 0; animation: none; }
 
-        .score {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #e94560;
+        /* ✏️ ช่องสำหรับกรอกคะแนน ✏️ */
+        .score-input {
+            width: 60px; font-size: 1.5em; font-weight: bold; color: #e94560;
+            background: rgba(255, 255, 255, 0.05); border: 1px dashed #a8dadc;
+            border-radius: 5px; text-align: center; outline: none; transition: all 0.3s ease;
         }
 
+        .score-input:focus {
+            background: rgba(255, 255, 255, 0.2); border: 2px solid #e94560; transform: scale(1.1);
+        }
+
+        .score-input::-webkit-outer-spin-button,
+        .score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .score-input[type=number] { -moz-appearance: textfield; }
+
         .bar-container {
-            width: 60px;
-            height: 350px;
-            background: #0f3460;
-            border-radius: 5px 5px 0 0;
-            display: flex;
-            align-items: flex-end;
+            width: 60px; height: 350px; background: #0f3460;
+            border-radius: 5px 5px 0 0; display: flex; align-items: flex-end;
         }
 
         .bar {
-            width: 100%;
-            background: linear-gradient(0deg, #d4a373 0%, #faedcd 100%);
-            height: 0%;
-            transition: height 1s ease-in-out;
-            border-radius: 5px 5px 0 0;
-            position: relative;
+            width: 100%; background: linear-gradient(0deg, #d4a373 0%, #faedcd 100%);
+            height: 0%; transition: height 0.5s ease-in-out;
+            border-radius: 5px 5px 0 0; position: relative;
         }
 
         .team-img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translate(-50%, -50%); 
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            z-index: 2;
-            cursor: pointer;
+            width: 50px; height: 50px; border-radius: 50%; border: 3px solid #fff;
+            object-fit: cover; position: absolute; top: 0; left: 50%;
+            transform: translate(-50%, -50%); background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 2; cursor: pointer;
             transition: transform 0.2s ease;
         }
 
-        .team-img:hover {
-            transform: translate(-50%, -50%) scale(1.2);
-            z-index: 10;
-        }
+        .team-img:hover { transform: translate(-50%, -50%) scale(1.2); z-index: 10; }
 
         .team-name {
-            margin-top: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-            text-align: center;
-            height: 40px;
-            color: #a8dadc;
+            margin-top: 15px; font-size: 1.2em; font-weight: bold;
+            text-align: center; height: 40px; color: #a8dadc;
         }
 
-        /* --- 🖼️ ส่วนของป๊อปอัปรูปภาพทีม --- */
+        /* --- 🖼️ ป๊อปอัปรูปภาพทีม --- */
         #imageModal {
-            display: none; 
-            position: fixed;
-            z-index: 990; 
+            display: none; position: fixed; z-index: 990; 
             left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.85); 
             align-items: center; justify-content: center; flex-direction: column;
@@ -176,8 +155,7 @@
 
         .modal-info {
             text-align: center; margin-bottom: 20px;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
-            animation: zoomIn 0.3s ease;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8); animation: zoomIn 0.3s ease;
         }
 
         .modal-game-name { color: #a8dadc; font-size: 1.5em; margin: 0 0 10px 0; }
@@ -209,16 +187,12 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        /* --- 🚨 ส่วนของป๊อปอัปหมดเวลา (Time's Up Overlay) 🚨 --- */
+        /* --- 🚨 ป๊อปอัปหมดเวลา 🚨 --- */
         #timeUpOverlay {
-            display: none;
-            position: fixed;
-            z-index: 9999;
+            display: none; position: fixed; z-index: 9999;
             left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            align-items: center; justify-content: center; flex-direction: column;
         }
         
         @keyframes smashDown {
@@ -229,41 +203,20 @@
         }
 
         .time-up-text {
-            font-size: 7em;
-            color: #ff0000;
-            text-transform: uppercase;
-            font-weight: 900;
-            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 2px 2px 0px #fff;
-            margin: 0;
-            animation: smashDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            font-size: 7em; color: #ff0000; text-transform: uppercase;
+            font-weight: 900; text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 2px 2px 0px #fff;
+            margin: 0; animation: smashDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
         }
 
-        .time-up-subtext {
-            color: #fff;
-            font-size: 2em;
-            margin-top: 20px;
-            animation: zoomIn 1s ease 0.5s both;
-        }
+        .time-up-subtext { color: #fff; font-size: 2em; margin-top: 20px; animation: zoomIn 1s ease 0.5s both; }
 
         .btn-close-timeup {
-            margin-top: 40px;
-            background: #e94560;
-            color: white;
-            font-size: 1.5em;
-            padding: 15px 40px;
-            border: 2px solid white;
-            border-radius: 50px;
-            cursor: pointer;
-            animation: zoomIn 1s ease 1s both;
-            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.5);
-            transition: all 0.3s;
+            margin-top: 40px; background: #e94560; color: white; font-size: 1.5em;
+            padding: 15px 40px; border: 2px solid white; border-radius: 50px;
+            cursor: pointer; animation: zoomIn 1s ease 1s both;
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.5); transition: all 0.3s;
         }
-
-        .btn-close-timeup:hover {
-            background: #fff;
-            color: #e94560;
-            transform: scale(1.1);
-        }
+        .btn-close-timeup:hover { background: #fff; color: #e94560; transform: scale(1.1); }
 
     </style>
 </head>
@@ -274,11 +227,14 @@
     <div class="timer-box">
         <div id="timerDisplay" class="timer-display">05:00</div>
         <br>
-        <button id="startBtn" class="btn-start" onclick="startTimer()">เริ่มจับเวลา 5 นาที</button>
+        <div class="btn-group">
+            <button id="startBtn" class="btn-start" onclick="startTimer()">เริ่มจับเวลา 5 นาที</button>
+            <button class="btn-reset" onclick="resetScores()">ล้างคะแนนเริ่มใหม่</button>
+        </div>
     </div>
 
     <div id="scoreboard">
-        กำลังโหลดคะแนน...
+        <h2 style="color: #a8dadc;">กำลังโหลดข้อมูลทีมจาก Google Sheet...</h2>
     </div>
 
     <div id="imageModal">
@@ -299,81 +255,138 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbycGzamS_3uywpnE1-MgfPt9PwHZzo0rk--6cjpWIswQsM7hFprpDtNnjj28V07RCbP/exec'; // *** ใส่ URL ของคุณที่นี่ ***
+        // *** ใส่ URL ของ Google Apps Script ตรงนี้ ***
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzWxrk6NUDH9F67p1kd__xJnE6yNdOv-yRKKay3bQpRigGmpDVsVwbZMKU0bbTwF9aT/exec'; 
 
-        async function fetchScores() {
+        let teamsData = [];
+
+        // ฟังก์ชันดึงข้อมูลจาก Google Sheet
+        async function fetchTeamData() {
             try {
                 const response = await fetch(API_URL);
                 let data = await response.json();
 
-                const scoreboard = document.getElementById('scoreboard');
-                scoreboard.innerHTML = ''; 
+                // 💾 ลองดึงคะแนนที่เคยจำไว้ในเบราว์เซอร์ (ถ้ามี)
+                let savedScores = [];
+                const localData = localStorage.getItem('yingsungyhingnao_scores');
+                if (localData) {
+                    savedScores = JSON.parse(localData);
+                }
 
-                const currentMaxScore = Math.max(...data.map(d => d.score));
-                const heightMaxReference = Math.max(currentMaxScore, 1); 
+                teamsData = data.map((item, index) => ({
+                    team: item.team,      
+                    imageUrl: item.imageUrl, 
+                    // ถ้าเคยมีคะแนนค้างไว้ ให้ดึงมาใช้ ถ้าไม่มีให้เป็น 0
+                    score: savedScores[index] !== undefined ? savedScores[index] : 0 
+                }));
 
-                data.forEach((item) => {
-                    const heightPercent = (item.score / heightMaxReference) * 100;
-                    const isWinner = (item.score === currentMaxScore && item.score > 0);
-                    const crownClass = isWinner ? 'crown winner' : 'crown loser';
-
-                    const col = document.createElement('div');
-                    col.className = 'team-col';
-                    
-                    col.innerHTML = `
-                        <div class="score-area">
-                            <div class="${crownClass}">👑</div>
-                            <div class="score">${item.score}</div>
-                        </div>
-                        <div class="bar-container">
-                            <div class="bar" style="height: ${heightPercent}%;">
-                                <img src="${item.imageUrl}" class="team-img" alt="team image" 
-                                     onclick="openModal('${item.imageUrl}', '${item.team}', ${item.score}, ${isWinner})">
-                            </div>
-                        </div>
-                        <div class="team-name">${item.team}</div>
-                    `;
-                    scoreboard.appendChild(col);
-                });
-
+                initBoard(); 
             } catch (error) {
                 console.error('Error fetching data:', error);
+                document.getElementById('scoreboard').innerHTML = '<h2 style="color: #ff0000;">เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheet</h2>';
             }
         }
 
-        // --- 🖼️ ฟังก์ชันเปิด/ปิด รูปภาพใหญ่ ---
-        function openModal(imageUrl, teamName, score, isWinner) {
-            const modal = document.getElementById('imageModal');
-            document.getElementById('largeImage').src = imageUrl;
-            document.getElementById('modalTeamName').innerText = teamName;
-            document.getElementById('modalScore').innerText = score;
+        // ฟังก์ชันสร้างบอร์ด
+        function initBoard() {
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = ''; 
+
+            teamsData.forEach((item, index) => {
+                const col = document.createElement('div');
+                col.className = 'team-col';
+                
+                col.innerHTML = `
+                    <div class="score-area">
+                        <div id="crown-${index}" class="crown loser">👑</div>
+                        <input type="number" class="score-input" id="scoreInput-${index}" value="${item.score}" 
+                               oninput="updateScore(${index}, this.value)" min="0">
+                    </div>
+                    <div class="bar-container">
+                        <div id="bar-${index}" class="bar" style="height: 0%;">
+                            <img src="${item.imageUrl}" class="team-img" alt="team image" 
+                                 onclick="openModal(${index})">
+                        </div>
+                    </div>
+                    <div class="team-name">${item.team}</div>
+                `;
+                scoreboard.appendChild(col);
+            });
+            updateVisuals(); 
+        }
+
+        // ฟังก์ชันอัปเดตคะแนนจากการพิมพ์
+        function updateScore(index, newValue) {
+            teamsData[index].score = parseInt(newValue) || 0; 
             
-            const crown = document.getElementById('modalCrown');
-            crown.style.display = isWinner ? 'block' : 'none';
+            // 💾 แอบจำคะแนนทั้งหมดลงเบราว์เซอร์ทุกครั้งที่มีการพิมพ์
+            const scoresOnly = teamsData.map(item => item.score);
+            localStorage.setItem('yingsungyhingnao_scores', JSON.stringify(scoresOnly));
+
+            updateVisuals(); 
+        }
+
+        // 🔄 ฟังก์ชันปุ่มรีเซ็ตคะแนน (ล้างค่าที่จำไว้)
+        function resetScores() {
+            // ขึ้นกล่องถามเพื่อป้องกันการเผลอกด
+            if (confirm("คุณต้องการล้างคะแนนทั้งหมดกลับเป็น 0 เพื่อเริ่มเกมใหม่ ใช่หรือไม่?")) {
+                localStorage.removeItem('yingsungyhingnao_scores'); // ลบความจำทิ้ง
+                
+                // สั่งให้ทุกทีมกลับเป็น 0 และอัปเดตหน้าจอ
+                teamsData.forEach((item, index) => {
+                    item.score = 0;
+                    document.getElementById(`scoreInput-${index}`).value = 0;
+                });
+                updateVisuals();
+            }
+        }
+
+        // ฟังก์ชันปรับความสูงกราฟและย้ายมงกุฎ
+        function updateVisuals() {
+            const currentMaxScore = Math.max(...teamsData.map(d => d.score), 0);
+            const heightMaxReference = Math.max(currentMaxScore, 1); 
+
+            teamsData.forEach((item, index) => {
+                const heightPercent = (item.score / heightMaxReference) * 100;
+                const isWinner = (item.score === currentMaxScore && item.score > 0);
+
+                document.getElementById(`bar-${index}`).style.height = `${heightPercent}%`;
+
+                const crown = document.getElementById(`crown-${index}`);
+                if (isWinner) {
+                    crown.classList.add('winner'); crown.classList.remove('loser');
+                } else {
+                    crown.classList.add('loser'); crown.classList.remove('winner');
+                }
+            });
+        }
+
+        // --- 🖼️ เปิด/ปิด รูปภาพใหญ่ ---
+        function openModal(index) {
+            const item = teamsData[index];
+            const currentMaxScore = Math.max(...teamsData.map(d => d.score), 0);
+            const isWinner = (item.score === currentMaxScore && item.score > 0);
+
+            const modal = document.getElementById('imageModal');
+            document.getElementById('largeImage').src = item.imageUrl;
+            document.getElementById('modalTeamName').innerText = item.team;
+            document.getElementById('modalScore').innerText = item.score;
+            
+            document.getElementById('modalCrown').style.display = isWinner ? 'block' : 'none';
             modal.style.display = 'flex'; 
         }
 
-        function closeModal() {
-            document.getElementById('imageModal').style.display = 'none'; 
-        }
-
-        // คลิกว่างๆ เพื่อปิดรูปใหญ่ได้
+        function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
+        
         window.onclick = function(event) {
             const modal = document.getElementById('imageModal');
-            if (event.target == modal) {
-                closeModal();
-            }
+            if (event.target == modal) closeModal();
         }
 
-        // --- 🚨 ฟังก์ชันปิดหน้าจอหมดเวลา 🚨 ---
-        function closeTimeUp() {
-            document.getElementById('timeUpOverlay').style.display = 'none';
-        }
+        function closeTimeUp() { document.getElementById('timeUpOverlay').style.display = 'none'; }
 
-        // --- ระบบจับเวลาและเอฟเฟกต์ ---
+        // --- ระบบจับเวลา ---
         let timeInSeconds = 5 * 60; // 5 นาที
-        // let timeInSeconds = 5; // ทดสอบแก้ตัวเลขตรงนี้เป็น 5 วินาที เพื่อดูเอฟเฟกต์ได้เร็วขึ้นครับ
-        
         let timerInterval = null;
 
         function startTimer() {
@@ -388,22 +401,18 @@
                 const timerDisplay = document.getElementById('timerDisplay');
                 timerDisplay.innerText = `${minutes}:${seconds}`;
 
-                // เมื่อเวลาเหลือ 0
                 if (timeInSeconds <= 0) {
                     clearInterval(timerInterval);
                     timerDisplay.innerText = "หมดเวลา!";
-                    
-                    // 1. เพิ่มคลาสให้ตัวเลขกระพริบ
                     timerDisplay.classList.add('timer-time-up'); 
-                    
-                    // 2. โชว์ป๊อปอัปกระแทกหน้าจอ
                     document.getElementById('timeUpOverlay').style.display = 'flex';
                 }
             }, 1000);
         }
 
-        fetchScores();
-        setInterval(fetchScores, 5000); 
+        // 🚀 เรียกใช้งานฟังก์ชัน
+        fetchTeamData(); 
+        
     </script>
 </body>
 </html>

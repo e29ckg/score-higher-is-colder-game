@@ -14,6 +14,7 @@
             --accent: #ff4d6d;
             --btn-color: #4a90e2;
             --success: #4CAF50;
+            --danger: #d9534f;
         }
 
         body {
@@ -44,23 +45,34 @@
             text-shadow: 0 0 15px rgba(255, 77, 109, 0.8), 0 0 30px rgba(255, 77, 109, 0.4);
         }
 
+        .top-buttons {
+            display: flex; gap: 15px; margin-bottom: 3vh;
+        }
+
         /* ปุ่มเปิดโหมดแข่งขัน */
         .comp-mode-btn {
             background: #f0a500; color: #12142d; border: none; padding: 10px 25px;
             font-size: 1.2rem; font-weight: bold; font-family: 'Kanit', sans-serif;
-            border-radius: 10px; cursor: pointer; transition: 0.3s; margin-bottom: 3vh;
+            border-radius: 10px; cursor: pointer; transition: 0.3s;
             box-shadow: 0 4px 15px rgba(240, 165, 0, 0.4);
         }
         .comp-mode-btn:hover { transform: scale(1.05); background: #ffbc2b; }
 
+        /* ปุ่มล้างคะแนน */
+        .reset-scores-btn {
+            background: rgba(217, 83, 79, 0.8); color: white; border: 2px solid var(--danger); 
+            padding: 10px 20px; font-size: 1.1rem; font-weight: bold; font-family: 'Kanit', sans-serif;
+            border-radius: 10px; cursor: pointer; transition: 0.3s;
+        }
+        .reset-scores-btn:hover { background: var(--danger); transform: scale(1.05); }
+
         /* --- กระดานคะแนน --- */
         .board-container {
-            background: var(--card-bg);
-            width: 95%; max-width: 1400px; 
+            background: var(--card-bg); width: 95%; max-width: 1400px; 
             height: 60vh; min-height: 450px; max-height: 700px; 
-            padding: 130px 30px 50px 30px; 
-            border-radius: 20px; display: flex; justify-content: space-evenly; 
-            align-items: flex-end; box-shadow: 0 15px 40px rgba(0,0,0,0.5); box-sizing: border-box;
+            padding: 130px 30px 50px 30px; border-radius: 20px; display: flex; 
+            justify-content: space-evenly; align-items: flex-end; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); box-sizing: border-box;
         }
 
         .team-column {
@@ -200,7 +212,10 @@
 
     <div class="header-section">
         <h1 class="game-title">วงกลม ระดมเรียง</h1>
-        <button class="comp-mode-btn" onclick="openCompModal()">⏱️ โหมดแข่งขัน 3 ทีม</button>
+        <div class="top-buttons">
+            <button class="comp-mode-btn" onclick="openCompModal()">⏱️ โหมดแข่งขัน 3 ทีม</button>
+            <button class="reset-scores-btn" onclick="clearAllScores()">🗑️ ล้างคะแนนทั้งหมด</button>
+        </div>
     </div>
 
     <div class="board-container" id="leaderboard"></div>
@@ -230,7 +245,7 @@
             <div class="comp-controls">
                 <button class="start" onclick="startStopwatch()">▶ เริ่ม</button>
                 <button class="stop" onclick="stopStopwatch()">⏸ หยุด</button>
-                <button class="reset" onclick="resetStopwatch()">🔄 รีเซ็ต</button>
+                <button class="reset" onclick="resetStopwatch()">🔄 รีเซ็ตเวลา</button>
             </div>
 
             <div class="comp-teams-wrapper">
@@ -271,24 +286,51 @@
 
 <script>
     // 🛑 อย่าลืมใส่ URL ใหม่ของคุณตรงนี้นะครับ
-    const API_URL = "https://script.google.com/macros/s/AKfycby-671G54ZlWjlbdcUIx3aLeCGrc0oYfvzyUv5VDaAviZv_8sUWMo1yPs575AiBqj8m/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbzWxrk6NUDH9F67p1kd__xJnE6yNdOv-yRKKay3bQpRigGmpDVsVwbZMKU0bbTwF9aT/exec"; 
 
-    // ตัวแปรเก็บข้อมูลทีมและคะแนนที่ใช้บนเว็บ (ตัดขาดจากคะแนนใน Sheet แล้ว)
     let currentTeamsData = [];
+
+    // โหลดคะแนนที่เซฟไว้ในเครื่อง
+    function loadSavedScores() {
+        let saved = localStorage.getItem('wordPuzzleScores');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    // เซฟคะแนนลงเครื่อง
+    function saveScoresToLocal() {
+        let scoresToSave = {};
+        currentTeamsData.forEach(t => {
+            scoresToSave[t.teamName] = t.totalScore; // เซฟโดยอิงจากชื่อทีม
+        });
+        localStorage.setItem('wordPuzzleScores', JSON.stringify(scoresToSave));
+    }
+
+    // ล้างคะแนนทั้งหมด
+    function clearAllScores() {
+        if(confirm("⚠️ คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตคะแนนทั้งหมดเป็น 0? (ล้างแล้วกู้คืนไม่ได้นะ!)")) {
+            localStorage.removeItem('wordPuzzleScores');
+            currentTeamsData.forEach(t => t.totalScore = 0);
+            renderBoard(currentTeamsData);
+        }
+    }
 
     async function fetchData() {
         try {
             const response = await fetch(API_URL);
-            let data = await response.json(); 
+            // 📌 [อัปเดตใหม่] รองรับ Array โดยตรงจาก Google Apps Script
+            let rawData = await response.json(); 
             
-            // 📌 [อัปเดตใหม่] ดึงแค่รูปภาพและชื่อทีมมา ส่วนคะแนนเราจะรักษาค่าเดิมที่อยู่บนเว็บไว้
-            currentTeamsData = data.teams.map((t, index) => {
-                // เช็คว่าถ้ามีทีมนี้อยู่บนเว็บแล้ว ให้เอาคะแนนที่จับเวลาได้มาใช้ต่อ ถ้ายังไม่มีให้เริ่มที่ 0
-                let localScore = currentTeamsData[index] ? currentTeamsData[index].totalScore : 0;
+            // ดึงคะแนนที่เซฟไว้ในคอมเครื่องนี้มาตรวจสอบ
+            let savedScores = loadSavedScores();
+            
+            // 📌 [อัปเดตใหม่] ใช้ข้อมูลจาก rawData และเปลี่ยน t.teamName เป็น t.team ตามรูป JSON ของคุณ
+            currentTeamsData = rawData.map((t) => {
+                // ถ้ามีคะแนนที่เคยเซฟไว้ (อิงตามชื่อทีม t.team) ให้ดึงมาใช้ ถ้าไม่มีให้เป็น 0
+                let localScore = savedScores[t.team] !== undefined ? savedScores[t.team] : 0;
                 return {
-                    teamName: t.teamName,
+                    teamName: t.team, // ใช้ t.team ให้ตรงกับ JSON จาก API ของคุณ
                     imageUrl: t.imageUrl,
-                    totalScore: localScore // ❌ ปฏิเสธคะแนนจาก Sheet แบบ 100%
+                    totalScore: parseFloat(localScore) // ปฏิเสธคะแนนจาก Sheet (t.score) และใช้ localScore แทน
                 };
             });
 
@@ -469,13 +511,11 @@
             let select = document.getElementById(`teamSelect${i}`);
             let timeInput = document.getElementById(`recordedTime${i}`);
             
-            // ตรวจสอบว่าช่องนั้นมีการเลือกทีมและมีเวลาประทับอยู่
             if (select.value !== "" && timeInput.value !== "--:--.--") {
                 let teamIndex = parseInt(select.value);
-                let timeStr = timeInput.value; // เช่น "01:23.45" หรือ "83.45"
+                let timeStr = timeInput.value;
                 let totalSeconds = 0;
 
-                // แปลงเวลา (นาที:วินาที.เศษ) ให้เป็น วินาทีล้วนๆ
                 if (timeStr.includes(':')) {
                     let parts = timeStr.split(':');
                     totalSeconds = (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
@@ -484,15 +524,14 @@
                 }
 
                 if (!isNaN(totalSeconds) && totalSeconds > 0) {
-                    // ปัดเศษทศนิยมให้เหลือ 2 ตำแหน่ง
-                    currentTeamsData[teamIndex].totalScore = totalSeconds.toFixed(2);
+                    currentTeamsData[teamIndex].totalScore = parseFloat(totalSeconds.toFixed(2));
                     hasUpdates = true;
                 }
             }
         }
 
         if (hasUpdates) {
-            // โค้ดนี้จะอัปเดตคะแนนลงกระดานโดยตรง (ไม่ต้องพักระบบ Sync แล้ว เพราะเราไม่ดึงคะแนนจาก Sheet อีกเลย)
+            saveScoresToLocal();
             renderBoard(currentTeamsData);
             closeModalAction('compModal');
             alert("✅ อัปเดตเวลาขึ้นกระดานหลักเรียบร้อยแล้ว!");
@@ -513,7 +552,7 @@
         }
     }
 
-    // ดึงข้อมูลทุก 3 วินาที (ดึงแค่ชื่อทีมกับรูปภาพ)
+    // ดึงข้อมูลรูปและชื่อทีมทุก 3 วินาที
     setInterval(fetchData, 3000);
     fetchData();
 </script>
