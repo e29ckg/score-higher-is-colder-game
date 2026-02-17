@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการคะแนนการแข่งขัน</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e; /* พื้นหลังสีหลักของเรา */
+            color: #ffffff;
+            text-align: center;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        h1 {
+            color: #a8dadc;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            font-size: 3em;
+            margin-bottom: 50px;
+        }
+        .menu-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        /* ตกแต่งกล่องเมนูแต่ละเกม */
+        .game-card {
+            background: #16213e;
+            width: 280px;
+            padding: 40px 20px;
+            border-radius: 20px;
+            text-decoration: none; /* เอาเส้นใต้ลิงก์ออก */
+            color: white;
+            border: 3px solid #0f3460;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .game-card:hover {
+            transform: translateY(-15px); /* เอฟเฟกต์ยกตัวตอนเอาเมาส์ชี้ */
+            border-color: #e94560; /* เปลี่ยนสีกรอบเป็นสีแดง */
+            box-shadow: 0 15px 30px rgba(233, 69, 96, 0.4);
+        }
+        .game-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        .game-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+        .game-desc {
+            color: #a8dadc;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🏆 เมนูเลือกระบบบอร์ดคะแนน 🏆</h1>
+
+    <div class="menu-container">
+        <a href="index-1.html" class="game-card">
+            <div class="game-icon">❄️</div>
+            <div class="game-title">ยิ่งสูงยิ่งหนาว</div>
+            <div class="game-desc">บอร์ดคะแนนต่อกล่องไม้แนวตั้ง</div>
+        </a>
+
+        <a href="index-2.html" class="game-card">
+            <div class="game-icon">🧩</div>
+            <div class="game-title">ปริศนาคำ</div>
+            <div class="game-desc">คลิกเพื่อเข้าสู่บอร์ดคะแนนเกมที่ 2</div>
+        </a>
+
+        <a href="index-3.html" class="game-card">
+            <div class="game-icon">⭕</div>
+            <div class="game-title">วงกลมระดมเรียง</div>
+            <div class="game-desc">คลิกเพื่อเข้าสู่บอร์ดคะแนนเกมที่ 3</div>
+        </a>
+    </div>
+
+</body>
+</html>
