@@ -52,6 +52,12 @@
             box-shadow: 0 4px 15px rgba(240, 165, 0, 0.4);
         }
         .comp-mode-btn:hover { transform: scale(1.05); background: #ffbc2b; }
+        
+        /* แจ้งเตือนการพัก Sync */
+        #syncStatus {
+            color: #ffff00; font-size: 1rem; margin-bottom: 1vh; display: none;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
 
         /* --- กระดานคะแนน --- */
         .board-container {
@@ -160,11 +166,15 @@
             background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 2px solid #2a2d5a;
         }
         
-        .recorded-time {
+        /* เปลี่ยนเป็นช่อง Input ให้แก้ไขได้ */
+        .recorded-time-input {
             font-size: 2.5rem; color: #555; font-weight: bold; height: 50px; margin-bottom: 10px;
             transition: color 0.3s; font-variant-numeric: tabular-nums;
+            background: transparent; border: none; text-align: center; width: 100%; outline: none;
+            font-family: 'Kanit', sans-serif;
         }
-        .recorded-time.finished { color: #f0a500; text-shadow: 0 0 15px rgba(240, 165, 0, 0.6); }
+        .recorded-time-input.finished { color: #f0a500; text-shadow: 0 0 15px rgba(240, 165, 0, 0.6); }
+        .recorded-time-input:focus { border-bottom: 2px dashed #f0a500; }
         
         .comp-img-wrapper {
             width: 180px; height: 180px; border-radius: 50%; border: 5px solid var(--btn-color);
@@ -179,6 +189,13 @@
             font-size: 1.1rem; border: none; outline: none; background: #fff; cursor: pointer;
         }
 
+        .submit-to-board-btn {
+            margin-top: 40px; background: var(--success); color: white; border: none; padding: 15px 40px;
+            font-size: 1.5rem; font-weight: bold; font-family: 'Kanit', sans-serif; border-radius: 15px;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 5px 20px rgba(76, 175, 80, 0.5); width: 100%; max-width: 400px;
+        }
+        .submit-to-board-btn:hover { transform: scale(1.05); background: #45a049; }
+
         @keyframes float {
             0%, 100% { transform: translate(-50%, 0); }
             50% { transform: translate(-50%, -15px); }
@@ -189,6 +206,7 @@
 
     <div class="header-section">
         <h1 class="game-title">วงกลม ระดมเรียง</h1>
+        <div id="syncStatus">⏸️ หยุดอัปเดตข้อมูลจาก Google Sheet อัตโนมัติชั่วคราวแล้ว</div>
         <button class="comp-mode-btn" onclick="openCompModal()">⏱️ โหมดแข่งขัน 3 ทีม</button>
     </div>
 
@@ -203,7 +221,7 @@
                 <img id="modalImg" class="modal-img" src="" alt="Team">
             </div>
             <div id="modalTeamName" class="modal-team-name">ชื่อทีม</div>
-            <div style="color:#aaa; font-size: 1.5rem;">คะแนนรวม</div>
+            <div style="color:#aaa; font-size: 1.5rem;">คะแนนรวม (วินาที)</div>
             <div id="modalScore" class="modal-score">0</div>
         </div>
     </div>
@@ -212,6 +230,7 @@
         <div class="modal-content comp-modal-content">
             <span class="close-btn" onclick="closeModalAction('compModal')">&times;</span>
             <h2 class="modal-game-title" style="font-size: 2.5rem;">แข่งขันรอบจับเวลา</h2>
+            <p style="color: #aaa; margin-top: -10px;">(คลิกที่เวลาเหนือรูปภาพเพื่อแก้ไขตัวเลขได้)</p>
             
             <div id="compMainTimer" class="comp-timer-box">00:00.00</div>
             
@@ -223,7 +242,7 @@
 
             <div class="comp-teams-wrapper">
                 <div class="comp-team-block">
-                    <div id="recordedTime1" class="recorded-time">--:--.--</div>
+                    <input type="text" id="recordedTime1" class="recorded-time-input" value="--:--.--">
                     <div class="comp-img-wrapper" onclick="recordTeamTime(1)">
                         <img id="compImg1" class="comp-img" src="https://via.placeholder.com/150/ffffff/000000?text=+" alt="รอเลือกทีม">
                     </div>
@@ -232,7 +251,7 @@
                     </select>
                 </div>
                 <div class="comp-team-block">
-                    <div id="recordedTime2" class="recorded-time">--:--.--</div>
+                    <input type="text" id="recordedTime2" class="recorded-time-input" value="--:--.--">
                     <div class="comp-img-wrapper" onclick="recordTeamTime(2)">
                         <img id="compImg2" class="comp-img" src="https://via.placeholder.com/150/ffffff/000000?text=+" alt="รอเลือกทีม">
                     </div>
@@ -241,7 +260,7 @@
                     </select>
                 </div>
                 <div class="comp-team-block">
-                    <div id="recordedTime3" class="recorded-time">--:--.--</div>
+                    <input type="text" id="recordedTime3" class="recorded-time-input" value="--:--.--">
                     <div class="comp-img-wrapper" onclick="recordTeamTime(3)">
                         <img id="compImg3" class="comp-img" src="https://via.placeholder.com/150/ffffff/000000?text=+" alt="รอเลือกทีม">
                     </div>
@@ -249,6 +268,10 @@
                         <option value="">-- เลือกทีม --</option>
                     </select>
                 </div>
+            </div>
+
+            <div>
+                <button class="submit-to-board-btn" onclick="sendTimesToBoard()">📌 ส่งเวลาขึ้นกระดานหลัก</button>
             </div>
         </div>
     </div>
@@ -258,30 +281,37 @@
     const API_URL = "https://script.google.com/macros/s/AKfycby-671G54ZlWjlbdcUIx3aLeCGrc0oYfvzyUv5VDaAviZv_8sUWMo1yPs575AiBqj8m/exec"; 
 
     let currentTeamsData = [];
+    let isAutoSyncPaused = false; // ตัวแปรสำหรับระงับการซิงค์ข้อมูลจาก Sheet ชั่วคราว
 
     async function fetchData() {
+        // ถ้าระงับการซิงค์ไว้ (เพราะเพิ่งกดส่งคะแนนจากในเว็บขึ้นบอร์ด) ให้ข้ามการดึงข้อมูลนี้ไปเลย
+        if (isAutoSyncPaused) return; 
+
         try {
             const response = await fetch(API_URL);
             let data = await response.json(); 
             currentTeamsData = data.teams;
             renderBoard(currentTeamsData);
-            updateCompDropdowns(); // อัปเดตรายชื่อทีมใน Dropdown
+            updateCompDropdowns(); 
         } catch (e) { console.log("Error fetching data:", e); }
     }
 
     // --- ส่วนกระดานทีม ---
     function renderBoard(teams) {
         const container = document.getElementById('leaderboard');
-        const validScores = teams.map(t => t.totalScore).filter(score => score > 0);
+        const validScores = teams.map(t => parseFloat(t.totalScore)).filter(score => score > 0);
         const currentMinScore = validScores.length > 0 ? Math.min(...validScores) : null;
         
         container.innerHTML = '';
         teams.forEach((team, index) => {
             let displayPercentage = 0;
-            if (team.totalScore > 0 && currentMinScore !== null) {
-                displayPercentage = (currentMinScore / team.totalScore) * 100;
+            let numScore = parseFloat(team.totalScore);
+
+            // คืนค่าความสูงให้กราฟจากสัดส่วนคะแนนที่เป็นวินาที
+            if (numScore > 0 && currentMinScore !== null) {
+                displayPercentage = (currentMinScore / numScore) * 100;
             }
-            const isWinner = team.totalScore === currentMinScore && team.totalScore > 0;
+            const isWinner = numScore === currentMinScore && numScore > 0;
 
             const col = document.createElement('div');
             col.className = 'team-column';
@@ -289,7 +319,7 @@
                 <div class="bar-wrapper">
                     <div class="bar-fill" style="height: ${displayPercentage}%"></div>
                     <div class="moving-group" style="bottom: ${displayPercentage}%">
-                        <div class="score-text">${team.totalScore}</div>
+                        <div class="score-text">${numScore}</div>
                         ${isWinner ? '<div class="crown">👑</div>' : ''}
                         <div class="team-icon" onclick="openTeamModal(${index})">
                             <img src="${team.imageUrl}" alt="${team.teamName}">
@@ -304,13 +334,14 @@
 
     function openTeamModal(teamIndex) {
         const team = currentTeamsData[teamIndex];
-        const validScores = currentTeamsData.map(t => t.totalScore).filter(score => score > 0);
+        const validScores = currentTeamsData.map(t => parseFloat(t.totalScore)).filter(score => score > 0);
         const currentMinScore = validScores.length > 0 ? Math.min(...validScores) : null;
-        const isWinner = team.totalScore === currentMinScore && team.totalScore > 0;
+        let numScore = parseFloat(team.totalScore);
+        const isWinner = numScore === currentMinScore && numScore > 0;
 
         document.getElementById('modalImg').src = team.imageUrl;
         document.getElementById('modalTeamName').innerText = team.teamName;
-        document.getElementById('modalScore').innerText = team.totalScore;
+        document.getElementById('modalScore').innerText = numScore;
         document.getElementById('modalCrown').style.display = isWinner ? 'block' : 'none';
         
         document.getElementById('teamModal').classList.add('show');
@@ -329,7 +360,6 @@
     }
 
     function updateCompDropdowns() {
-        // อัปเดต Dropdown ทั้ง 3 ช่อง โดยพยายามคงค่าเดิมที่เลือกไว้
         for (let i = 1; i <= 3; i++) {
             let select = document.getElementById(`teamSelect${i}`);
             let currentVal = select.value;
@@ -341,7 +371,6 @@
                 option.innerText = team.teamName;
                 select.appendChild(option);
             });
-            // ใส่ค่าเดิมกลับไปถ้ายังแมตช์อยู่
             if (currentVal) select.value = currentVal; 
         }
     }
@@ -356,9 +385,9 @@
             img.src = "https://via.placeholder.com/150/ffffff/000000?text=+";
         }
         
-        // รีเซ็ตเวลาของช่องนั้นๆ เมื่อเปลี่ยนทีม
-        document.getElementById(`recordedTime${slot}`).innerText = "--:--.--";
-        document.getElementById(`recordedTime${slot}`).classList.remove('finished');
+        let timeDisplay = document.getElementById(`recordedTime${slot}`);
+        timeDisplay.value = "--:--.--";
+        timeDisplay.classList.remove('finished');
     }
 
     function formatTime(ms) {
@@ -371,12 +400,11 @@
 
     function startStopwatch() {
         if (!isRunning) {
-            // จับเวลาเริ่มต้นจากการหักลบเวลาที่ผ่านไป (กรณีเคยกดหยุดแล้วเริ่มใหม่)
             startTime = Date.now() - elapsedTime;
             stopwatchInterval = setInterval(() => {
                 elapsedTime = Date.now() - startTime;
                 document.getElementById('compMainTimer').innerText = formatTime(elapsedTime);
-            }, 10); // อัปเดตทุก 10 มิลลิวินาที
+            }, 10);
             isRunning = true;
         }
     }
@@ -391,24 +419,21 @@
         elapsedTime = 0;
         document.getElementById('compMainTimer').innerText = "00:00.00";
         
-        // ล้างเวลาที่ประทับไว้บนรูปภาพทีมทั้ง 3 ช่อง
         for (let i = 1; i <= 3; i++) {
-            document.getElementById(`recordedTime${i}`).innerText = "--:--.--";
-            document.getElementById(`recordedTime${i}`).classList.remove('finished');
+            let timeDisplay = document.getElementById(`recordedTime${i}`);
+            timeDisplay.value = "--:--.--";
+            timeDisplay.classList.remove('finished');
         }
     }
 
     function recordTeamTime(slot) {
-        // ต้องกดเริ่มเวลาก่อนถึงจะบันทึกได้ และต้องมีการเลือกทีมไว้แล้ว
         if (!isRunning) return; 
         if (document.getElementById(`teamSelect${slot}`).value === "") return;
 
         let timeDisplay = document.getElementById(`recordedTime${slot}`);
-        // ถ้าบันทึกไปแล้ว ไม่ให้กดทับซ้ำ
         if (timeDisplay.classList.contains('finished')) return;
 
-        // ประทับเวลา ณ วินาทีนั้น
-        timeDisplay.innerText = formatTime(elapsedTime);
+        timeDisplay.value = formatTime(elapsedTime);
         timeDisplay.classList.add('finished');
 
         checkAllFinished();
@@ -422,18 +447,62 @@
             let select = document.getElementById(`teamSelect${i}`);
             let timeDisplay = document.getElementById(`recordedTime${i}`);
             
-            // เช็คเฉพาะช่องที่มีการเลือกทีมลงแข่ง
             if (select.value !== "") {
                 activeTeamsCount++;
                 if (!timeDisplay.classList.contains('finished')) {
-                    allFinished = false; // ยังมีทีมที่ยังไม่ถูกกดบันทึกเวลา
+                    allFinished = false; 
                 }
             }
         }
 
-        // ถ้าทีมที่ลงแข่งทั้งหมดกดปุ่มเสร็จแล้ว ให้หยุดเวลาหลักอัตโนมัติ
         if (allFinished && activeTeamsCount > 0) {
             stopStopwatch();
+        }
+    }
+
+    // --- ระบบส่งคะแนนขึ้นกระดานหลัก ---
+    function sendTimesToBoard() {
+        let hasUpdates = false;
+
+        for (let i = 1; i <= 3; i++) {
+            let select = document.getElementById(`teamSelect${i}`);
+            let timeInput = document.getElementById(`recordedTime${i}`);
+            
+            // ตรวจสอบว่าช่องนั้นมีการเลือกทีมและมีเวลาประทับอยู่
+            if (select.value !== "" && timeInput.value !== "--:--.--") {
+                let teamIndex = parseInt(select.value);
+                let timeStr = timeInput.value; // เช่น "01:23.45" หรือ "83.45"
+                let totalSeconds = 0;
+
+                // แปลงเวลา (นาที:วินาที.เศษ) ให้เป็น วินาทีล้วนๆ
+                if (timeStr.includes(':')) {
+                    let parts = timeStr.split(':');
+                    totalSeconds = (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
+                } else {
+                    totalSeconds = parseFloat(timeStr);
+                }
+
+                if (!isNaN(totalSeconds) && totalSeconds > 0) {
+                    // ปัดเศษทศนิยมให้เหลือ 2 ตำแหน่งเพื่อให้ดูสวยงาม
+                    currentTeamsData[teamIndex].totalScore = totalSeconds.toFixed(2);
+                    hasUpdates = true;
+                }
+            }
+        }
+
+        if (hasUpdates) {
+            // ระงับการดึงข้อมูลจาก Sheet ชั่วคราว เพื่อไม่ให้ถูกทับ
+            isAutoSyncPaused = true;
+            document.getElementById('syncStatus').style.display = 'block';
+            
+            // อัปเดตกระดาน
+            renderBoard(currentTeamsData);
+            closeModalAction('compModal');
+            
+            // แจ้งเตือนผู้ใช้
+            alert("✅ อัปเดตเวลาขึ้นกระดานหลักเรียบร้อยแล้ว!\n\n(ระบบได้ระงับการดึงข้อมูลจาก Sheet ชั่วคราว เพื่อป้องกันคะแนนหาย หากคุณโหลดหน้าเว็บใหม่ ข้อมูลจะกลับไปอ้างอิงจาก Sheet ครับ)");
+        } else {
+            alert("⚠️ ไม่พบข้อมูลเวลาที่จะส่งขึ้นกระดาน กรุณากดเริ่มและบันทึกเวลาก่อนครับ");
         }
     }
 
