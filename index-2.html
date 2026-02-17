@@ -243,17 +243,42 @@
             const response = await fetch(API_URL);
             let sheetData = await response.json();
             
+            // ป้องกันข้อมูลจาก Sheet ไม่ใช่ Array
+            let sheetTeams = [];
+            if (Array.isArray(sheetData)) {
+                sheetTeams = sheetData;
+            } else if (sheetData && Array.isArray(sheetData.teams)) {
+                sheetTeams = sheetData.teams;
+            }
+
             // 2. ดึงข้อมูลคะแนนที่เคยให้ไว้จาก LocalStorage
             const savedData = localStorage.getItem('wordPuzzleScores');
-            const localTeams = savedData ? JSON.parse(savedData) : [];
+            let localTeams = [];
+            
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    // 🛑 ป้องกัน Error ข้อมูลเก่าค้าง: ตรวจสอบว่าเป็น Array จริงๆ
+                    if (Array.isArray(parsed)) {
+                        localTeams = parsed;
+                    } else if (parsed && Array.isArray(parsed.teams)) {
+                        localTeams = parsed.teams; // รองรับเผื่อเป็นข้อมูลเก่าเวอร์ชันก่อนหน้า
+                    }
+                } catch (e) {
+                    console.warn("ข้อมูลในเครื่องเก่าหรือเสียหาย ระบบจะเริ่มสร้างใหม่");
+                }
+            }
 
-            // 3. นำข้อมูลมาประกอบร่างกัน (แก้ไขส่วนนี้ให้ตรงกับ Key 'team' และ 'imageUrl' ที่ได้จาก API)
-            teamsData = sheetData.map((sTeam, index) => {
-                // จับคู่คะแนนด้วยชื่อทีมที่มาจาก API คือ sTeam.team
-                const existingTeam = localTeams.find(lTeam => lTeam.name === sTeam.team);
+            // 3. นำข้อมูลมาประกอบร่างกัน
+            teamsData = sheetTeams.map((sTeam, index) => {
+                // ดึงชื่อทีมให้ตรงกับ API (รองรับทั้ง key: team และ teamName)
+                const teamName = sTeam.team || sTeam.teamName || `กลุ่ม ${index + 1}`;
+                
+                // จับคู่คะแนนด้วยชื่อทีม
+                const existingTeam = localTeams.find(lTeam => lTeam.name === teamName);
                 
                 return {
-                    name: sTeam.team || `ทีม ${index + 1}`, // เปลี่ยนจาก sTeam.teamName เป็น sTeam.team
+                    name: teamName,
                     imageUrl: sTeam.imageUrl || "https://cdn-icons-png.flaticon.com/512/3024/3024593.png",
                     scores: existingTeam ? existingTeam.scores : [],
                     totalScore: existingTeam ? existingTeam.totalScore : 0
@@ -267,14 +292,19 @@
         } catch (error) {
             console.error("Error fetching from Google Sheet:", error);
             
-            // ถ้าเน็ตหลุดหรือโหลด Sheet ไม่ได้ ให้พยายามโหลดข้อมูลเก่าจากเครื่องมาแสดงแทน
+            // ถ้าเน็ตหลุด ให้พยายามโหลดข้อมูลเก่าที่เป็น Array จากเครื่องมาแสดงแทน
             const savedData = localStorage.getItem('wordPuzzleScores');
             if (savedData) {
-                teamsData = JSON.parse(savedData);
-                renderBoard();
-            } else {
-                document.getElementById('leaderboard').innerHTML = '<h2 style="color:var(--accent);">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบลิงก์ API</h2>';
+                try {
+                    const parsed = JSON.parse(savedData);
+                    if (Array.isArray(parsed)) {
+                        teamsData = parsed;
+                        renderBoard();
+                        return;
+                    }
+                } catch(e){}
             }
+            document.getElementById('leaderboard').innerHTML = '<h2 style="color:var(--accent);">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบลิงก์ API</h2>';
         }
     }
 
@@ -284,6 +314,8 @@
 
     // วาดกระดานคะแนน
     function renderBoard() {
+        if (!Array.isArray(teamsData) || teamsData.length === 0) return;
+
         const container = document.getElementById('leaderboard');
         const currentMaxScore = Math.max(...teamsData.map(t => t.totalScore));
         container.innerHTML = '';
