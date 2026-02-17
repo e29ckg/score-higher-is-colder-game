@@ -229,15 +229,17 @@
         </div>
     </div>
 
+
+    
 <script>
-    // 🛑 นำ Web App URL ของคุณมาใส่ตรงนี้
+        // 🛑 นำ Web App URL ของคุณมาใส่ตรงนี้
     const API_URL = "https://script.google.com/macros/s/AKfycbzWxrk6NUDH9F67p1kd__xJnE6yNdOv-yRKKay3bQpRigGmpDVsVwbZMKU0bbTwF9aT/exec"; 
 
     let teamsData = [];
     let currentEditingIndex = null;
 
-    // ระบบโหลดข้อมูลผสานกัน (Sheet -> ชื่อ/รูปภาพ | LocalStorage -> คะแนน)
-    async function initData() {
+    // ฟังก์ชันสำหรับดึงข้อมูลจาก Sheet และผสานกับคะแนนในเครื่อง
+    async function fetchAndUpdateData() {
         try {
             // 1. ดึงข้อมูลทีมและรูปภาพจาก Google Sheet
             const response = await fetch(API_URL);
@@ -258,11 +260,10 @@
             if (savedData) {
                 try {
                     const parsed = JSON.parse(savedData);
-                    // 🛑 ป้องกัน Error ข้อมูลเก่าค้าง: ตรวจสอบว่าเป็น Array จริงๆ
                     if (Array.isArray(parsed)) {
                         localTeams = parsed;
                     } else if (parsed && Array.isArray(parsed.teams)) {
-                        localTeams = parsed.teams; // รองรับเผื่อเป็นข้อมูลเก่าเวอร์ชันก่อนหน้า
+                        localTeams = parsed.teams; 
                     }
                 } catch (e) {
                     console.warn("ข้อมูลในเครื่องเก่าหรือเสียหาย ระบบจะเริ่มสร้างใหม่");
@@ -271,10 +272,7 @@
 
             // 3. นำข้อมูลมาประกอบร่างกัน
             teamsData = sheetTeams.map((sTeam, index) => {
-                // ดึงชื่อทีมให้ตรงกับ API (รองรับทั้ง key: team และ teamName)
                 const teamName = sTeam.team || sTeam.teamName || `กลุ่ม ${index + 1}`;
-                
-                // จับคู่คะแนนด้วยชื่อทีม
                 const existingTeam = localTeams.find(lTeam => lTeam.name === teamName);
                 
                 return {
@@ -285,26 +283,33 @@
                 };
             });
 
-            // บันทึกการอัปเดตและแสดงผล
+            // บันทึกการอัปเดตและแสดงผลกระดานใหม่
             saveData();
             renderBoard();
+
+            // หากหน้าต่างกรอกคะแนนเปิดอยู่ ให้อัปเดตชื่อทีมเผื่อมีการเปลี่ยนชื่อจาก Sheet
+            if (document.getElementById('scoringModal').classList.contains('show') && currentEditingIndex !== null) {
+                document.getElementById('scoringTeamName').innerText = teamsData[currentEditingIndex].name;
+            }
 
         } catch (error) {
             console.error("Error fetching from Google Sheet:", error);
             
-            // ถ้าเน็ตหลุด ให้พยายามโหลดข้อมูลเก่าที่เป็น Array จากเครื่องมาแสดงแทน
-            const savedData = localStorage.getItem('wordPuzzleScores');
-            if (savedData) {
-                try {
-                    const parsed = JSON.parse(savedData);
-                    if (Array.isArray(parsed)) {
-                        teamsData = parsed;
-                        renderBoard();
-                        return;
-                    }
-                } catch(e){}
+            // กรณีโหลดครั้งแรกแล้วเน็ตมีปัญหา ให้ใช้ข้อมูลเก่าในเครื่องแทน
+            if (teamsData.length === 0) {
+                const savedData = localStorage.getItem('wordPuzzleScores');
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        if (Array.isArray(parsed)) {
+                            teamsData = parsed;
+                            renderBoard();
+                            return;
+                        }
+                    } catch(e){}
+                }
+                document.getElementById('leaderboard').innerHTML = '<h2 style="color:var(--accent);">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบลิงก์ API</h2>';
             }
-            document.getElementById('leaderboard').innerHTML = '<h2 style="color:var(--accent);">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบลิงก์ API</h2>';
         }
     }
 
@@ -375,6 +380,7 @@
 
     // แสดงรายการคะแนนแต่ละรอบ พร้อมปุ่มแก้ไขและลบ
     function renderRoundList() {
+        if (currentEditingIndex === null) return;
         const team = teamsData[currentEditingIndex];
         const listContainer = document.getElementById('roundList');
         
@@ -463,6 +469,12 @@
             });
             saveData();
             renderBoard();
+            
+            // ถ้าหน้าต่างคะแนนเปิดอยู่ ให้รีเฟรชยอดรวมในนั้นด้วย
+            if (document.getElementById('scoringModal').classList.contains('show')) {
+                renderRoundList();
+                document.getElementById('scoringTotalScore').innerText = '0';
+            }
         }
     }
 
@@ -476,11 +488,19 @@
         const modal = document.getElementById(modalId);
         if (event.target === modal) {
             modal.classList.remove('show');
+            // เคลียร์สถานะการแก้ไขเพื่อความปลอดภัย
+            if (modalId === 'scoringModal') {
+                currentEditingIndex = null;
+            }
         }
     }
 
-    // รันทันทีเมื่อโหลดหน้าเว็บ
-    initData();
+    // 🚀 รันดึงข้อมูลครั้งแรกทันทีที่เปิดเว็บ
+    fetchAndUpdateData();
+    
+    // ⏱️ ตั้งเวลาให้รันซ้ำ ดึงข้อมูลจาก Sheet ใหม่ทุกๆ 5 วินาที (5000 ms)
+    setInterval(fetchAndUpdateData, 5000);
+
 </script>
 </body>
 </html>
