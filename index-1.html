@@ -55,6 +55,14 @@
         }
         .btn-start:hover { background: #457b9d; color: white; }
 
+        /* --- 🆕 ปุ่มรีเซ็ตเวลา (เพิ่มใหม่) --- */
+        .btn-reset-time {
+            background: #f4a261; color: #1d3557; font-size: 1.2em;
+            font-weight: bold; padding: 10px 20px; border: none;
+            border-radius: 5px; cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn-reset-time:hover { background: #e76f51; color: white; }
+
         /* ปุ่มรีเซ็ตคะแนน */
         .btn-reset {
             background: #1d3557; color: #a8dadc; font-size: 1.2em;
@@ -229,6 +237,7 @@
         <br>
         <div class="btn-group">
             <button id="startBtn" class="btn-start" onclick="startTimer()">เริ่มจับเวลา 5 นาที</button>
+            <button class="btn-reset-time" onclick="resetTimer()">↺ รีเซ็ตเวลา</button>
             <button class="btn-reset" onclick="resetScores()">ล้างคะแนนเริ่มใหม่</button>
         </div>
     </div>
@@ -251,7 +260,7 @@
     <div id="timeUpOverlay">
         <h1 class="time-up-text">หมดเวลา!</h1>
         <div class="time-up-subtext">วางมือจากกล่องไม้ การแข่งขันสิ้นสุดลงแล้ว</div>
-        <button class="btn-close-timeup" onclick="closeTimeUp()">ดูผลคะแนน</button>
+        <button class="btn-close-timeup" onclick="resetTimer()">ดูผลคะแนน</button>
     </div>
 
     <script>
@@ -386,7 +395,8 @@
         function closeTimeUp() { document.getElementById('timeUpOverlay').style.display = 'none'; }
 
         // --- ระบบจับเวลา ---
-        let timeInSeconds = 5 * 60; // 5 นาที
+        const DEFAULT_TIME = 5 * 60; // 5 นาที (300 วินาที)
+        let timeInSeconds = DEFAULT_TIME; 
         let timerInterval = null;
 
         function startTimer() {
@@ -395,19 +405,41 @@
 
             timerInterval = setInterval(() => {
                 timeInSeconds--;
-                let minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
-                let seconds = (timeInSeconds % 60).toString().padStart(2, '0');
-                
-                const timerDisplay = document.getElementById('timerDisplay');
-                timerDisplay.innerText = `${minutes}:${seconds}`;
+                updateTimerDisplay(); // อัปเดตตัวเลขหน้าจอ
 
                 if (timeInSeconds <= 0) {
                     clearInterval(timerInterval);
-                    timerDisplay.innerText = "หมดเวลา!";
-                    timerDisplay.classList.add('timer-time-up'); 
+                    document.getElementById('timerDisplay').innerText = "หมดเวลา!";
+                    document.getElementById('timerDisplay').classList.add('timer-time-up'); 
                     document.getElementById('timeUpOverlay').style.display = 'flex';
                 }
             }, 1000);
+        }
+
+        // 🔄 ฟังก์ชันรีเซ็ตเวลา (ใหม่)
+        function resetTimer() {
+            // 1. หยุดเวลา
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            // 2. ตั้งค่าเวลากลับเป็นค่าเริ่มต้น
+            timeInSeconds = DEFAULT_TIME;
+
+            // 3. อัปเดตหน้าจอและปุ่ม
+            updateTimerDisplay();
+            document.getElementById('startBtn').style.display = 'block'; // แสดงปุ่มเริ่มอีกครั้ง
+            
+            // 4. ลบเอฟเฟกต์หมดเวลา (ถ้ามี)
+            document.getElementById('timerDisplay').classList.remove('timer-time-up');
+            document.getElementById('timeUpOverlay').style.display = 'none';
+        }
+
+        // ฟังก์ชันช่วยแสดงผลเวลา (แยกออกมาเพื่อให้เรียกใช้ซ้ำได้ง่าย)
+        function updateTimerDisplay() {
+            let minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
+            let seconds = (timeInSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${minutes}:${seconds}`;
         }
 
         // 🚀 เรียกใช้งานฟังก์ชัน
